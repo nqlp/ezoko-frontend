@@ -10,6 +10,7 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [foundProduct, setFoundProduct] = useState<ProductVariant | null>(null);
+  const displayImage = foundProduct?.image ?? foundProduct?.product.featuredImage ?? null;
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -97,12 +98,12 @@ export default function Page() {
               </h2>
 
               <div className="flex gap-4 items-start">
-                {/* IMAGE */}
+                {/* Image variant -> fallback produit */}
                 <div className="w-28 h-28 bg-white rounded-lg border flex items-center justify-center shrink-0">
-                  {foundProduct.image ? (
+                  {displayImage ? (
                     <img
-                      src={foundProduct.image.src}
-                      alt={foundProduct.image.altText ?? "Product image"}
+                      src={displayImage.url}
+                      alt={displayImage.altText ?? "Product image"}
                       className="max-w-full max-h-full object-contain"
                     />
                   ) : (
@@ -112,7 +113,7 @@ export default function Page() {
                   )}
                 </div>
 
-                {/* INFOS */}
+                {/* Infos */}
                 <div className="flex-1 space-y-1">
                   <div className="font-bold text-gray-900">
                     {foundProduct.product.title}
@@ -133,7 +134,6 @@ export default function Page() {
               </div>
             </div>
           )}
-
         </div>
       </div>
     </main>
