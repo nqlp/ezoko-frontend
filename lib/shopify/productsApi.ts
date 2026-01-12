@@ -1,11 +1,16 @@
-import { ShopifyClient } from "@/lib/services/shopify-client";
+import "server-only";
+import { ShopifyClient } from "@/lib/shopify/client";
 import { ProductVariant } from "@/lib/types/product";
 
-export class ProductRepository {
-    constructor(private client: ShopifyClient) { }
+export class ProductsApi {
+  private client: ShopifyClient;
+  
+  constructor(client: ShopifyClient) {
+    this.client = client;
+  }
 
-    async findByBarcode(barcode: string): Promise<ProductVariant[]> {
-        const query = `
+  async findByBarcode(barcode: string): Promise<ProductVariant[]> {
+    const query = `
       query($query: String!) {
         productVariants(first: 1, query: $query) {
           edges {
@@ -34,14 +39,14 @@ export class ProductRepository {
       }
     `;
 
-        const result = await this.client.query<{
-            productVariants: {
-                edges: Array<{ node: ProductVariant }>;
-            };
-        }>(query, {
-            query: `barcode:${barcode}`,
-        });
+    const result = await this.client.query<{
+      productVariants: {
+        edges: Array<{ node: ProductVariant }>;
+      };
+    }>(query, {
+      query: `barcode:${barcode}`,
+    });
 
-        return result.productVariants.edges.map(edge => edge.node);
-    }
+    return result.productVariants.edges.map(edge => edge.node);
+  }
 }

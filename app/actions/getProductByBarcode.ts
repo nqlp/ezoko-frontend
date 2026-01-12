@@ -1,7 +1,7 @@
 "use server";
 
-import { ShopifyClient } from "@/lib/services/shopify-client";
-import { ProductRepository } from "@/lib/repositories/product-repository";
+import { ShopifyClient } from "@/lib/shopify/client";
+import { ProductsApi } from "@/lib/shopify/productsApi";
 import { ApiResponse, ProductVariant } from "@/lib/types/product";
 
 export async function getProductByBarcode(
@@ -9,7 +9,7 @@ export async function getProductByBarcode(
 ): Promise<ApiResponse<ProductVariant[]>> {
   try {
     const client = new ShopifyClient();
-    const repository = new ProductRepository(client);
+    const repository = new ProductsApi(client);
     
     const products = await repository.findByBarcode(barcode);
     

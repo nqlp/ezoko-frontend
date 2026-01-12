@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getProductByBarcode } from "./getProductByBarcode";
+import { getProductByBarcode } from "./actions/getProductByBarcode";
 import { ProductVariant } from "@/lib/types/product";
 
 export default function Page() {
