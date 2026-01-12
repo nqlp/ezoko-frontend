@@ -2,6 +2,7 @@ export type ProductVariant = {
     id: string;
     title: string;
     sku: string;
+    inventoryQuantity?: number;
     image?: {
         url: string;
         altText: string | null;
@@ -17,6 +18,11 @@ export type ProductVariant = {
         name: string;
         value: string;
     }[];
+};
+
+export type BinQty = {
+    binLocation: string;
+    qty: number;
 };
 
 export type ApiResponse<T> =

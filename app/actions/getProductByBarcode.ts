@@ -10,17 +10,26 @@ export async function getProductByBarcode(
   try {
     const client = new ShopifyClient();
     const repository = new ProductsApi(client);
-    
+
     const products = await repository.findByBarcode(barcode);
-    
+
+    // safety net: there should never be more than 1 product per barcode
+    if (products.length > 1) {
+      return {
+        success: false,
+        message: `Erreur critique: Ce code-barres (${barcode}) est assigné à ${products.length} variantes différentes. 
+                  Veuillez corriger dans Shopify.`
+      }
+    }
+
     return { success: true, data: products };
   } catch (error) {
     console.error("Error fetching product by barcode:", error);
-    
+
     if (error instanceof Error) {
       return { success: false, message: error.message };
     }
-    
+
     return { success: false, message: "Erreur serveur" };
   }
 }
