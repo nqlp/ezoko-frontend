@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getProductByBarcode } from "./actions/getProductByBarcode";
-import { getBinQty } from "./actions/getBinQty";
+import { getVariantByBarcode } from "./actions/getVariantByBarcode";
 import { BinQty, ProductVariant } from "@/lib/types/product";
 
 export default function Page() {
@@ -12,7 +11,6 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
   const [foundProduct, setFoundProduct] = useState<ProductVariant | null>(null);
   const [binQty, setBinQty] = useState<BinQty[]>([]);
-  const [binQtyError, setBinQtyError] = useState<string | null>(null);
   const [isMagnified, setIsMagnified] = useState(false);
   const displayImage = foundProduct?.image ?? foundProduct?.product.featuredImage ?? null;
 
@@ -44,23 +42,17 @@ export default function Page() {
 
     setLoading(true);
     setError(null);
-    setBinQtyError(null);
     setBinQty([]);
     setBarcode(""); // clear for the next scan/type
     setIsMagnified(false);
     inputRef.current?.focus();
 
     try {
-      const result = await getProductByBarcode(value);
+      const result = await getVariantByBarcode(value);
       if (result.success && result.data.length > 0) {
         const product = result.data[0];
         setFoundProduct(product);
-        const binResult = await getBinQty(value);
-        if (binResult.success) {
-          setBinQty(binResult.data);
-        } else {
-          setBinQtyError(binResult.message);
-        }
+        setBinQty(product.binQty ?? []);
       }
 
       else if (result.success && result.data.length === 0) {
@@ -196,7 +188,7 @@ export default function Page() {
                       </div>
 
                       <div className="text-xs font-mono uppercase tracking-widest text-(--ezoko-ink) opacity-70">
-                        Stock {foundProduct.inventoryQuantity ?? "N/A"}
+                        On-hand {foundProduct.inventoryQuantity ?? "N/A"}
                       </div>
                     </div>
                   </div>
@@ -211,43 +203,30 @@ export default function Page() {
                       </span>
                     </div>
 
-                    {binQtyError && (
-                      <div className="border-x-2 border-b-2 border-(--ezoko-ink) bg-white px-3 py-2 text-[11px] font-mono text-(--ezoko-ink)">
-                        {binQtyError}
-                      </div>
-                    )}
-
-                    {!binQtyError && binQty.length === 0 && (
+                    {binQty.length === 0 && (
                       <div className="border-x-2 border-b-2 border-(--ezoko-ink) bg-white px-3 py-2 text-[11px] font-mono text-(--ezoko-ink) opacity-70">
                         Aucun stock par bin
                       </div>
                     )}
 
-                    {!binQtyError && binQty.length > 0 && (
-                      <div className="border-x-2 border-b-2 border-(--ezoko-ink) bg-white">
-                        <table className="w-full text-left text-[11px]">
-                          <thead className="bg-(--ezoko-ink) text-white">
-                            <tr>
-                              <th className="px-3 py-2 font-mono uppercase tracking-[0.25em]">Bin</th>
-                              <th className="px-3 py-2 text-right font-mono uppercase tracking-[0.25em]">Qty</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y-2 divide-(--ezoko-ink)">
-                            {binQty.map((entry, index) => (
-                              <tr
-                                key={`${entry.binLocation}-${index}`}
-                                className={index % 2 === 0 ? "bg-white" : "bg-(--ezoko-paper)"}
-                              >
-                                <td className="px-3 py-2 font-mono tracking-widest text-(--ezoko-ink)">
-                                  {entry.binLocation}
-                                </td>
-                                <td className="px-3 py-2 text-right font-semibold text-(--ezoko-ink)">
-                                  {entry.qty}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                    {binQty.length > 0 && (
+                      <div className="border-x-2 border-b-2 border-(--ezoko-ink) bg-white p-3">
+                        <thead> 
+                          <tr className="grid grid-cols-2 gap-4 border-b border-(--ezoko-ink) pb-2 mb-2">
+                            <th className="text-[10px] font-mono uppercase tracking-[0.35em] text-(--ezoko-ink)] text-left">Bin Location</th>
+                            <th className="text-[10px] font-mono uppercase tracking-[0.35em] text-(--ezoko-ink)] text-left">Quantity</th>
+                          </tr>
+                        </thead>
+                        <div className="flex flex-wrap gap-2">
+                          {binQty.map((entry, index) => (
+                            <span
+                              key={`${entry.binLocation}-${index}`}
+                              className="rounded-lg border border-(--ezoko-ink) bg-(--ezoko-paper) px-3 py-1 text-xs font-semibold text-(--ezoko-ink)"
+                            >
+                              {entry.binLocation} {entry.qty}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
