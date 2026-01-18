@@ -2,27 +2,28 @@
 
 import { ShopifyClient } from "@/lib/shopify/client";
 import { ProductsApi } from "@/lib/shopify/productsApi";
-import { ApiResponse, ProductVariant } from "@/lib/types/product";
+import { ApiResponse } from "@/lib/types/ApiResponse";
+import { ProductVariant } from "@/lib/types/ProductVariant";
 
 export async function getVariantByBarcode(
   barcode: string
-): Promise<ApiResponse<ProductVariant[]>> {
+): Promise<ApiResponse<ProductVariant>> {
   try {
     const client = new ShopifyClient();
     const productApi = new ProductsApi(client);
 
-    const productsVariants = await productApi.getVariantsByBarcode(barcode);
+    const productVariants = await productApi.findVariantsByBarcode(barcode);
 
-    // safety net: there should never be more than 1 product per barcode
-    if (productsVariants.length > 1) {
+    // safety net: there should never be more than 1 variant per barcode
+    if (productVariants.length > 1) {
       return {
         success: false,
-        message: `Erreur critique: Ce code-barres (${barcode}) est assigné à ${productsVariants.length} variantes différentes. 
+        message: `Erreur critique: Ce code-barres (${barcode}) est assigné à ${productVariants.length} variantes différentes. 
                   Veuillez corriger dans Shopify.`
-      }
+      };
     }
 
-    return { success: true, data: productsVariants };
+    return { success: true, data: productVariants[0] };
   } catch (error) {
     console.error("Error fetching product by barcode:", error);
 

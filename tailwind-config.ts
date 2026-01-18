@@ -5,8 +5,11 @@ const config: Config = {
     extend: {
       colors: {
         ezoko: {
-          green: '#4ADE80',
-          dark: '#0f1115',
+          mint: "#8ab9a6",
+          pine: "#4c6b62",
+          ink: "#252323",
+          rust: "#da7e57",
+          paper: "#f6f3f2",
         }
       },
     },
