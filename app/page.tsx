@@ -47,7 +47,7 @@ export default function Page() {
       if (result.success && result.data) {
         const product = result.data;
         setFoundProduct(product); // Saving found product
-        setStockLocation(product.binQty ?? []); // On remplit le tableau
+        setStockLocation(product.binQty ?? []); // // Fill stock locations
       } else if (result.success && !result.data) {
         setError("Product not found");
       } else if (!result.success) {
@@ -115,13 +115,12 @@ export default function Page() {
 
       {foundProduct && <VariantCard foundProduct={foundProduct} />}
 
-      {foundProduct && (
-        <StockTable
-          stockLocation={stockLocation}
-          incrementQty={incrementQty}
-          decrementQty={decrementQty}
-        />
-      )}
+      {foundProduct && <StockTable
+        stockLocation={stockLocation}
+        incrementQty={incrementQty}
+        decrementQty={decrementQty}
+      />
+      }
     </main>
   );
 }
