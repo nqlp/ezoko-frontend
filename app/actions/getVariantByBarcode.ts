@@ -18,8 +18,7 @@ export async function getVariantByBarcode(
     if (productVariants.length > 1) {
       return {
         success: false,
-        message: `Erreur critique: Ce code-barres (${barcode}) est assigné à ${productVariants.length} variantes différentes. 
-                  Veuillez corriger dans Shopify.`
+        message: `Error: Multiple variants found with the same barcode (${barcode}). Please make the changes in Shopify.`,
       };
     }
 
