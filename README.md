@@ -16,32 +16,24 @@ This prototype aims to demonstrate the following functionalities:
 ## Technologies Used
 
 - Next.js (Full Stack React Framework)
-- TypeScript 
+- TypeScript (Type Safety)
 - Tailwind CSS (Styling)
 - Shopify GraphQL API
 - Railway (Deployment)
 
-
 ## Architecture (separation of responsibilities)
 
-This prototype follows a minimal layered approach:
-
-- **UI / Page** (`app/page.tsx`): displays the page + results.
-- **Use case (Server Action)** (`app/actions/getVariantByBarcode.ts`): orchestrates the request, check inputs, and converts errors into user-friendly messages.
-- **Data access (Shopify)** (`app/lib/shopify/*`): contains the GraphQL client and the API wrapper used to query Shopify.
-- **Parsing / Mapping** (`app/lib/shopify/parsers.ts`): small pure functions that transform Shopify raw values (metafield strings, metaobject fields) into typed data used by the UI.
-- **Types** (`app/types/*`): TypeScript types for the Shopify response shape and the domain models used by the UI.
+- **UI** (`app/`): page layout, state, and view components.
+- **Use cases (Server Actions)** (`app/actions/`): input validation, error mapping.
+- **Data access (Shopify)** (`lib/shopify/`): GraphQL client, queries, and API wrappers.
+- **Types** (`lib/types/`): response shapes and domain models shared across layers.
 
 ### Barcode safety net
 
 If Shopify returns **2 variants** for the same barcode (`first: 2`), the action should stop and display a meaningful error instead of rendering a product.
 
-### Warehouse stock (metaobject references)
-
-`custom.warehouse_stock` is a metafield that can reference metaobjects (e.g., one per bin location). The app parses these references and displays them as a BIN/QTY table.
-
 ## Prerequisites
-- .env file with Shopify store credentials:
+- `.env` file with Shopify store credentials:
   - `SHOPIFY_STORE_DOMAIN`
   - `SHOPIFY_STOREFRONT_ACCESS_TOKEN`
   - `SHOPIFY_API_VERSION`
@@ -63,8 +55,11 @@ First, run the development server:
 npm run dev
 ```
 
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
 ## Project Structure
 
+```
 src/
 ├── app/
 │   ├── actions/
@@ -75,7 +70,7 @@ src/
 │   │       └── StockTable.tsx       # The Bin/Qty table with logic
 │   ├── globals.css                  # Tailwind imports and CSS variables
 │   ├── layout.tsx                   # Main layout wrapper (Fonts & Footer)
-│   ├── page.tsx                     # Main controller (State & Event Handlers)
+│   ├── page.tsx                     # UI orchestrator (state, events, rendering)
 │
 ├── components/                      # Reusable UI Components
 │   └── Footer.tsx                   # Footer component
@@ -84,15 +79,16 @@ src/
 │   ├── shopify/                     # Shopify API Configuration
 │   │   ├── client.ts                # Generic GraphQL client
 │   │   ├── productsApi.ts           # Product-specific logic
-│   │   └── queries/                  # GraphQL queries
-│   │       └── variantQuery.ts              # GraphQL query definition
+│   │   └── queries/                 # GraphQL queries
+│   │       └── variantQuery.ts      # GraphQL query definition
 │   └── types/                       # TypeScript Interfaces
 │       ├── ApiResponse.ts
 │       ├── MetaobjectField.ts       # Metaobject field shape (metafields)
 │       ├── MetaobjectNode.ts        # Metaobject node shape
 │       ├── ProductVariant.ts        # ProductVariant shape  
-│       ├── StockLocation.ts
+│       ├── StockLocation.ts         # Stock location metafield shape
 │       └── VariantWithStock.ts      # ProductVariant + stock metafields
+```
 
 ## Technical choices
 
@@ -106,6 +102,4 @@ src/
 2. The frontend calls the `getVariantByBarcode` action with the provided barcode.
 3. The backend (Server Action)`getVariantByBarcode` uses `productsApi.ts` to `findVariantsByBarcode` to fetch product variant data from Shopify.
 4. Shopify processes the GraphQL query and returns the product variant data.
-4. The fetched data is returned to the frontend and displayed to the user.
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. The fetched data is returned to the frontend and displayed to the user.
