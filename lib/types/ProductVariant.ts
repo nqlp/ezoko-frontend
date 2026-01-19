@@ -51,27 +51,23 @@ export type ProductVariant = {
     } | null;
 
     metafields: {
-        edges: Array<{
-            node: {
-                id: string;
-                namespace: string;
-                key: string;
-                value: string;
-                references?: {
-                    edges: Array<{
-                        node: {
-                            handle: string;
-                            fields: {
-                                key: string;
-                                value: string;
-                                reference?: {
-                                    handle?: string;
-                                    fields?: { key: string; value: string }[];
-                                } | null;
-                            }[];
-                        };
-                    }>;
-                };
+        nodes: Array<{
+            id: string;
+            namespace: string;
+            key: string;
+            value: string;
+            references?: {
+                nodes: Array<{
+                    handle: string;
+                    fields: {
+                        key: string;
+                        value: string;
+                        reference?: {
+                            handle?: string;
+                            fields?: { key: string; value: string }[];
+                        } | null;
+                    }[];
+                }>;
             };
         }>;
     };
