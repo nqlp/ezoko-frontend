@@ -102,4 +102,5 @@ src/
 2. The frontend calls the `getVariantByBarcode` action with the provided barcode.
 3. The backend (Server Action)`getVariantByBarcode` uses `productsApi.ts` to `findVariantsByBarcode` to fetch product variant data from Shopify.
 4. Shopify processes the GraphQL query and returns the product variant data.
-5. The fetched data is returned to the frontend and displayed to the user.
+5. ProductsApi extracts bin locations and quantities from metafields and constructs the response.
+6. The fetched data is returned to the frontend and displayed to the user.
