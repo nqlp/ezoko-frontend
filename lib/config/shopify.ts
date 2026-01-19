@@ -4,7 +4,7 @@ const apiUrl =
     process.env.SHOPIFY_API_URL ||
     (storeDomain
         ? `https://${storeDomain}/admin/api/${apiVersion}/graphql.json`
-        : "https://ezokofishing.myshopify.com/admin/api/2025-10/graphql.json");
+        : `https://${storeDomain}/admin/api/2025-10/graphql.json)`);
 
 export const shopifyConfig = {
     apiUrl,
