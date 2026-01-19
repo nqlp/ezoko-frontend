@@ -31,8 +31,8 @@ export default function VariantCard({ foundProduct }: VariantCardProps) {
     }, [isMagnified]);
 
     return (
-        <div className="mt-4 border-2 border-(--ezoko-ink) bg-(--ezoko-paper) p-4">
-            <div className="flex items-start justify-between gap-4">
+        <div className="mt-4 border-(--ezoko-ink) bg-(--ezoko-mint)">
+            <div>
                 <div>
                     <h2 className="text-lg font-bold text-(--ezoko-ink)">Product found!</h2>
                 </div>
@@ -47,7 +47,7 @@ export default function VariantCard({ foundProduct }: VariantCardProps) {
                         <img
                             src={displayImage.url}
                             alt={displayImageAlt ?? "Product image"}
-                            className="max-w-full max-h-full object-contain"
+                            className="max-w-full max-h-full object-contain bg-white"
                         />
                     ) : (
                         <span className="text-[10px] text-(--ezoko-ink) opacity-50 text-center uppercase">
@@ -56,12 +56,12 @@ export default function VariantCard({ foundProduct }: VariantCardProps) {
                     )}
                 </div>
 
-                <div className="flex-1 space-y-2">
-                    <div className="text-base font-semibold text-(--ezoko-ink)">
+                <div className="text-lg uppercase">
+                    <div>
                         {foundProduct.product?.title}
                     </div>
 
-                    <div className="text-sm text-(--ezoko-ink)">
+                    <div>
                         {foundProduct.selectedOptions.map((variant) => (
                             <div key={variant.name}>
                                 {variant.name}: {variant.value}
@@ -69,11 +69,11 @@ export default function VariantCard({ foundProduct }: VariantCardProps) {
                         ))}
                     </div>
 
-                    <div className="text-xs uppercase tracking-widest text-(--ezoko-ink)">
+                    <div>
                         SKU: {foundProduct.sku}
                     </div>
 
-                    <div className="text-xs uppercase tracking-widest text-(--ezoko-ink)">
+                    <div>
                         On-hand: {foundProduct.inventoryQuantity ?? "N/A"}
                     </div>
                 </div>
@@ -81,7 +81,7 @@ export default function VariantCard({ foundProduct }: VariantCardProps) {
 
             {isMagnified && displayImage && (
                 <div
-                    className="fixed inset-0 flex items-center justify-center z-50 cursor-pointer p-4"
+                    className="fixed inset-0 z-50 flex justify-center p-4 bg-(--ezoko-paper)/50 backdrop-blur-sm"
                     onClick={() => setIsMagnified(false)}
                 >
                     <img
@@ -90,7 +90,7 @@ export default function VariantCard({ foundProduct }: VariantCardProps) {
                         className="max-w-full max-h-full object-contain border-2 border-(--ezoko-ink) bg-white"
                     />
                     <button
-                        className="absolute top-4 right-4 text-(--ezoko-mint) text-2xl font-bold p-2 hover:text-white"
+                        className="absolute top-4 right-4 cursor-pointer text-(--ezoko-ink) text-3xl font-bold"
                         onClick={() => setIsMagnified(false)}
                     >
                         X
