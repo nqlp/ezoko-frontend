@@ -27,33 +27,32 @@ export class ProductsApi {
     if (variants.length === 0) return [];
 
     const variantsWithStock = variants.map((variant) => {
-      const stockMetafield = variant.metafields?.edges.find(
-        (edge) => edge.node.key === "warehouse_stock"
+      const stockMetafield = variant.metafields?.nodes.find(
+        (node) => node.key === "warehouse_stock"
       );
-      const stockEdges = stockMetafield?.node.references?.edges || [];
+      const stockNodes = stockMetafield?.references?.nodes || [];
 
       const binQty: StockLocation[] = [];
 
       const getBinName = (fields: MetaobjectField[], fallbackHandle: string) => {
         const binField = fields.find((field) => field.key === "bin_location");
         const referenceFields = binField?.reference?.fields ?? [];
-        const referenceValue = referenceFields.find((f) => f.key === "bin_location")?.value;
+        const referenceValue = referenceFields.find((f) => f.key === "bin")?.value;
         if (referenceValue) {
           return referenceValue;
         }
 
-        if (binField?.reference?.handle) {
+        else if (binField?.reference?.handle) {
           return binField.reference.handle;
         }
 
         return fallbackHandle || "Unknown";
       };
 
-      for (const edge of stockEdges) {
-        const fields = edge.node.fields || [];
-        const binName = getBinName(fields, edge.node.handle);
-
-        const qtyField = fields.find((field) => field.key === "qty");
+      for (const edge of stockNodes) {
+        const stockEntry = edge.fields;
+        const binName = getBinName(stockEntry, edge.handle);
+        const qtyField = stockEntry.find((field) => field.key === "qty");
         const parsedQty = Number.parseFloat(qtyField?.value ?? "0");
         const qty = Number.isFinite(parsedQty) ? parsedQty : 0;
 
