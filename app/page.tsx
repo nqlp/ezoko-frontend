@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getProductByBarcode } from "./getProductByBarcode";
-import { ProductVariant } from "@/lib/types/product";
+import { getVariantByBarcode } from "./actions/getVariantByBarcode";
+import VariantCard from "./scan/_components/VariantCard";
+import StockTable from "./scan/_components/StockTable";
+import { StockLocation } from "@/lib/types/StockLocation";
+import { ProductVariant } from "@/lib/types/ProductVariant";
 
 export default function Page() {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -10,7 +13,21 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [foundProduct, setFoundProduct] = useState<ProductVariant | null>(null);
-  const displayImage = foundProduct?.image ?? foundProduct?.product.featuredImage ?? null;
+  const [stockLocation, setStockLocation] = useState<StockLocation[]>([]);
+
+  const incrementQty = (index: number) => {
+    setStockLocation((prev) => (
+      prev.map((loc, i) => i === index ? { ...loc, qty: loc.qty + 1 } : loc)
+    ));
+  };
+
+  const decrementQty = (index: number) => {
+    setStockLocation((prev) => (
+      prev.map((loc, i) =>
+        i === index ? { ...loc, qty: Math.max(0, loc.qty - 1) } : loc
+      )
+    ));
+  };
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -23,42 +40,49 @@ export default function Page() {
       return;
     }
 
+    setLoading(true);
     setError(null);
-    setBarcode(""); // clear for the next scan/type
+    setStockLocation([]);
+    setFoundProduct(null); // Clear for new search
+    setBarcode("");
     inputRef.current?.focus();
 
     try {
-      const result = await getProductByBarcode(barcode);
-      if (result.success && result.data.length > 0) {
-        setFoundProduct(result.data[0]);
-      }
+      const result = await getVariantByBarcode(value);
 
-      else if (result.success && result.data.length === 0) {
-        setError("Produit non trouvé");
-      }
-      else if (!result.success) {
+      if (result.success && result.data) {
+        const product = result.data;
+        setFoundProduct(product); // Saving found product
+        setStockLocation(product.binQty ?? []); // // Fill stock locations
+      } else if (result.success && !result.data) {
+        setError("Product not found");
+      } else if (!result.success) {
         setError(result.message);
       }
-    }
-
-    catch (error) {
-      setError("Erreur lors de la récupération du produit");
-    }
-
-    finally {
+    } catch (e) {
+      setError("Error fetching product");
+      console.error(e);
+    } finally {
       setLoading(false);
       setBarcode("");
-      inputRef.current?.focus();
     }
   }
 
   return (
-    <main className="min-h-screen flex items-start justify-center bg-gray-50 p-6">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow p-6 text-gray-900">
-        <h1 className="text-2xl font-bold mb-4 text-gray-900">EZOKO Barcode</h1>
+    <main className="min-h-screen">
+      <div className="h-12 w-12 rounded-full border-2 border-(--ezoko-ink) bg-white p-2 mx-auto mt-4">
+        <img src="/favicon.ico" alt="EZOKO logo" className="h-full w-full object-contain" />
+      </div>
+      <h1 className="text-4xl uppercase text-center text-(--ezoko-ink)">
+        EZOKO Barcode
+      </h1>
 
-        <div className="grid gap-2">
-          <label htmlFor="barcode" className="text-sm font-semibold flex justify-center text-gray-700">
+      <section className="p-3 mt-6 max-w-md mx-auto border-2 border-(--ezoko-ink) bg-(--ezoko-paper)">
+        <div className="grid gap-3">
+          <label
+            htmlFor="barcode"
+            className="text-xs uppercase text-(--ezoko-ink)"
+          >
             Barcode
           </label>
 
@@ -72,70 +96,37 @@ export default function Page() {
                 submit();
               }
             }}
-            placeholder="Taper le barcode"
+            placeholder="Type your barcode here..."
             inputMode="numeric"
             autoComplete="off"
-            className="border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-black text-gray-900 placeholder-gray-400 bg-white"
+            disabled={loading}
+            className="border-2 border-(--ezoko-ink) px-2 py-2 text-lg focus:border-(--ezoko-pine)"
           />
 
           <button
             onClick={submit}
-            className="mt-2 rounded-xl border border-gray-300 px-4 py-2 font-medium hover:bg-gray-100 text-gray-900 bg-white"
+            disabled={loading}
+            className="border-2 border-(--ezoko-ink) px-2 py-4 uppercase hover:bg-(--ezoko-mint) hover:cursor-pointer"
           >
             {loading ? "Recherche..." : "Envoyer"}
           </button>
 
           {error && (
-            <div className="mt-2">
-              <span className="text-red-600 text-sm">{error}</span>
-            </div>
-          )}
-
-          {foundProduct && (
-            <div className="mt-4 p-4 border border-green-500 rounded-xl bg-green-50">
-              <h2 className="text-lg font-semibold mb-3 text-green-800">
-                Produit trouvé
-              </h2>
-
-              <div className="flex gap-4 items-start">
-                {/* Image variant -> fallback produit */}
-                <div className="w-28 h-28 bg-white rounded-lg border flex items-center justify-center shrink-0">
-                  {displayImage ? (
-                    <img
-                      src={displayImage.url}
-                      alt={displayImage.altText ?? "Product image"}
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  ) : (
-                    <span className="text-xs text-gray-400 text-center">
-                      Aucune image
-                    </span>
-                  )}
-                </div>
-
-                {/* Infos */}
-                <div className="flex-1 space-y-1">
-                  <div className="font-bold text-gray-900">
-                    {foundProduct.product.title}
-                  </div>
-
-                  <div className="text-sm text-gray-700">
-                    {foundProduct.selectedOptions.map((option) => (
-                      <div key={option.name}>
-                        {option.name}: {option.value}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="text-sm text-gray-600">
-                    SKU: {foundProduct.sku}
-                  </div>
-                </div>
-              </div>
+            <div className="mt-2 border border-(--ezoko-rust) bg-red-100 px-3 py-2 text-xs font-bold">
+              {error}
             </div>
           )}
         </div>
-      </div>
+      </section>
+
+      {foundProduct && <VariantCard foundProduct={foundProduct} />}
+
+      {foundProduct && <StockTable
+        stockLocation={stockLocation}
+        incrementQty={incrementQty}
+        decrementQty={decrementQty}
+      />
+      }
     </main>
   );
 }

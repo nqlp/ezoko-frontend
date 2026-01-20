@@ -1,3 +1,5 @@
+import "server-only";
+
 import { shopifyConfig, validateShopifyConfig } from "@/lib/config/shopify";
 
 export class ShopifyClient {
