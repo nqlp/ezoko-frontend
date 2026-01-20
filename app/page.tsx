@@ -16,12 +16,18 @@ export default function Page() {
   const [stockLocation, setStockLocation] = useState<StockLocation[]>([]);
 
   const incrementQty = (index: number) => {
-    setStockLocation((prev) => (prev.map((loc, i) => i === index ? { ...loc, quantity: loc.qty + 1 } : loc)));
+    setStockLocation((prev) => (
+      prev.map((loc, i) => i === index ? { ...loc, qty: loc.qty + 1 } : loc)
+    ));
   };
 
   const decrementQty = (index: number) => {
-    setStockLocation((prev) => (prev.map((loc, i) => i === index ? { ...loc, quantity: Math.max(0, loc.qty - 1) } : loc)));
-  }
+    setStockLocation((prev) => (
+      prev.map((loc, i) =>
+        i === index ? { ...loc, qty: Math.max(0, loc.qty - 1) } : loc
+      )
+    ));
+  };
 
   useEffect(() => {
     inputRef.current?.focus();
