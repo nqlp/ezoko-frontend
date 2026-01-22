@@ -60,13 +60,11 @@ export class ProductsApi {
         const parsedQty = Number.parseFloat(qtyField?.value ?? "0");
         const qty = Number.isFinite(parsedQty) ? parsedQty : 0;
 
-        if (qty > 0) {
-          binQty.push({
-            id: edge.id,
-            binLocation: binName,
-            qty: qty,
-          });
-        }
+        binQty.push({
+          id: edge.id,
+          binLocation: binName,
+          qty: qty,
+        });
       }
 
       return {
