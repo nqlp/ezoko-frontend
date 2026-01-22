@@ -58,6 +58,7 @@ export type ProductVariant = {
             value: string;
             references?: {
                 nodes: Array<{
+                    id: string;
                     handle: string;
                     fields: {
                         key: string;

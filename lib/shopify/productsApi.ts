@@ -5,6 +5,8 @@ import { StockLocation } from "@/lib/types/StockLocation";
 import { FIND_VARIANTS_BY_BARCODE_QUERY } from "@/lib/shopify/queries/variantQuery";
 import { VariantWithStock } from "@/lib/types/VariantWithStock";
 import { MetaobjectField } from "@/lib/types/MetaobjectField";
+import { MetaobjectUpdatePayload } from "../types/ShopifyPayload";
+import { UPDATE_METAOBJECT_QTY } from "@/lib/shopify/mutations/updateMetaobjectQty";
 
 export class ProductsApi {
   private client: ShopifyClient;
@@ -58,6 +60,7 @@ export class ProductsApi {
 
         if (qty > 0) {
           binQty.push({
+            id: edge.id,
             binLocation: binName,
             qty: qty,
           });
@@ -71,5 +74,12 @@ export class ProductsApi {
     });
 
     return variantsWithStock;
+  }
+
+  async updateMetaobjectQty(id: string, newQty: string): Promise<MetaobjectUpdatePayload> {
+    const result = await this.client.mutate<MetaobjectUpdatePayload>(
+      UPDATE_METAOBJECT_QTY, { id, newQty }
+    );
+    return result;
   }
 }

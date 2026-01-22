@@ -6,6 +6,7 @@ import VariantCard from "./scan/_components/VariantCard";
 import StockTable from "./scan/_components/StockTable";
 import { StockLocation } from "@/lib/types/StockLocation";
 import { ProductVariant } from "@/lib/types/ProductVariant";
+import { UpdateBinQtyByID } from "./actions/updateBinQty";
 
 export default function Page() {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -14,24 +15,63 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
   const [foundProduct, setFoundProduct] = useState<ProductVariant | null>(null);
   const [stockLocation, setStockLocation] = useState<StockLocation[]>([]);
+  const [initialStock, setInitialStock] = useState<StockLocation[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
-  const incrementQty = (index: number) => {
+  const incrementQty = async (index: number) => {
     setStockLocation((prev) => (
       prev.map((loc, i) => i === index ? { ...loc, qty: loc.qty + 1 } : loc)
     ));
   };
 
-  const decrementQty = (index: number) => {
+  const decrementQty = async (index: number) => {
     setStockLocation((prev) => (
       prev.map((loc, i) =>
-        i === index ? { ...loc, qty: Math.max(0, loc.qty - 1) } : loc
-      )
-    ));
+        i === index ? { ...loc, qty: Math.max(0, loc.qty - 1) } : loc))
+    );
   };
+
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    setSaveStatus(null);
+    setError(null);
+    const changes = stockLocation.filter((loc, index) => loc.qty !== initialStock[index].qty);
+
+    try {
+      const results = await Promise.all(
+        changes.map((loc) => UpdateBinQtyByID(loc.id, loc.qty))
+      );
+
+      const failedUpdates = results.filter((res) => !res.success);
+
+      if (failedUpdates.length > 0) {
+        setSaveStatus(`Save failed: ${failedUpdates[0].message}. Some lines were not updated.`);
+      } else {
+        setSaveStatus("Updates saved to Shopify.");
+        setInitialStock(JSON.parse(JSON.stringify(stockLocation))); // Update to new stock
+      }
+    }
+    catch (e) {
+      console.error("Error saving changes:", e);
+      setSaveStatus("Error when saving changes.");
+      setInitialStock(JSON.parse(JSON.stringify(initialStock))); // Revert to initial stock
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const hasChanges = stockLocation.some((loc, index) => loc.qty !== initialStock[index].qty);
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (!saveStatus) return;
+    const timer = setTimeout(() => setSaveStatus(null), 3000);
+    return () => clearTimeout(timer);
+  }, [saveStatus]);
 
   async function submit() {
     const value = barcode.trim();
@@ -54,6 +94,8 @@ export default function Page() {
         const product = result.data;
         setFoundProduct(product); // Saving found product
         setStockLocation(product.binQty ?? []); // // Fill stock locations
+        setInitialStock(JSON.parse(JSON.stringify(product.binQty))); // Deep copy for initial stock
+        setSaveStatus(null);
       } else if (result.success && !result.data) {
         setError("Product not found");
       } else if (!result.success) {
@@ -108,7 +150,7 @@ export default function Page() {
             disabled={loading}
             className="border-2 border-(--ezoko-ink) px-2 py-4 uppercase hover:bg-(--ezoko-mint) hover:cursor-pointer"
           >
-            {loading ? "Recherche..." : "Envoyer"}
+            {loading ? "Looking for variants..." : "Send"}
           </button>
 
           {error && (
@@ -121,11 +163,39 @@ export default function Page() {
 
       {foundProduct && <VariantCard foundProduct={foundProduct} />}
 
-      {foundProduct && <StockTable
-        stockLocation={stockLocation}
-        incrementQty={incrementQty}
-        decrementQty={decrementQty}
-      />
+      {foundProduct &&
+        <>
+          <StockTable
+            stockLocation={stockLocation}
+            initialStock={initialStock}
+            incrementQty={incrementQty}
+            decrementQty={decrementQty}
+          />
+
+          <div className="text-center mt-4">
+            <button
+              onClick={handleSaveChanges}
+              disabled={!hasChanges || isSaving}
+              className="border-2 border-(--ezoko-ink) px-4 py-2 uppercase font-bold hover:bg-(--ezoko-mint) disabled:opacity-50 disabled:cursor-not-allowed">
+              {isSaving ? "Saving to Shopify" : "Confirm and Save Changes"}
+            </button>
+
+
+            {saveStatus &&
+              <div
+                className="update-toast fixed bottom-4 right-4 z-50 rounded-md border border-(--ezoko-pine) bg-green-50 px-4 py-2 font-semibold text-(--ezoko-pine) shadow-lg"
+              >
+                {saveStatus}
+              </div>
+            }
+
+            {error &&
+              <div className="mt-3 border border-(--ezoko-rust) bg-red-100 px-3 py-2 text-xs font-bold">
+                {error}
+              </div>
+            }
+          </div>
+        </>
       }
     </main>
   );

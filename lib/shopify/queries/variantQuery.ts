@@ -1,5 +1,5 @@
-export const FIND_VARIANTS_BY_BARCODE_QUERY = `
-  query GetVariantByBarcode($query: String!) {
+export const FIND_VARIANTS_BY_BARCODE_QUERY = /* GraphQL */ `
+query GetVariantByBarcode($query: String!) {
     productVariants(first: 2, query: $query) {
       nodes {
         # variant informations
@@ -9,7 +9,10 @@ export const FIND_VARIANTS_BY_BARCODE_QUERY = `
         barcode
         displayName
         price
+
+        # available quantity 
         inventoryQuantity
+
         createdAt
         updatedAt
 
@@ -44,6 +47,7 @@ export const FIND_VARIANTS_BY_BARCODE_QUERY = `
             references(first: 10) {
               nodes {
                 ... on Metaobject {
+                  id
                   handle
                   fields {
                     key
@@ -74,12 +78,18 @@ export const FIND_VARIANTS_BY_BARCODE_QUERY = `
           measuredType
           quantityUnit
         }
-
-        inventoryItem {
-          tracked
-          countryCodeOfOrigin
-          provinceCodeOfOrigin
-        }
+        
+        # TODO: Uncomment when Shopify enables inventoryItem in Storefront API
+        # inventoryItem {
+        # id
+        # inventoryLevels(first: 2) {
+        #   nodes {
+        #       location { 
+        #         id
+        #       }
+        #     }
+        #   }
+        # }
 
         # product associated to the variant
         product {

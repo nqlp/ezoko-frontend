@@ -31,4 +31,24 @@ export class ShopifyClient {
 
         return json.data;
     }
+
+    async mutate<T>(mutation: string, variables: Record<string, unknown>): Promise<T> {
+        const response = await fetch(this.apiUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Shopify-Access-Token": this.accessToken,
+            },
+            body: JSON.stringify({ query: mutation, variables }),
+            cache: "no-store",
+        });
+
+        const json = await response.json();
+
+        if (json.errors) {
+            throw new Error(`GraphQL Error: ${JSON.stringify(json.errors)}`);
+        }
+
+        return json.data;
+    }
 }
