@@ -6,7 +6,7 @@ import VariantCard from "./scan/_components/VariantCard";
 import StockTable from "./scan/_components/StockTable";
 import { StockLocation } from "@/lib/types/StockLocation";
 import { ProductVariant } from "@/lib/types/ProductVariant";
-import { UpdateBinQtyByID } from "./actions/updateBinQty";
+import { saveInventoryChanges } from "./actions/saveInventoryChanges";
 
 export default function Page() {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -36,32 +36,43 @@ export default function Page() {
     setIsSaving(true);
     setSaveStatus(null);
     setError(null);
-    const changes = stockLocation.filter((loc, index) => loc.qty !== initialStock[index].qty);
 
     try {
-      const results = await Promise.all(
-        changes.map((loc) => UpdateBinQtyByID(loc.id, loc.qty))
+      const inventoryItemId = foundProduct?.inventoryItem?.id;
+      const locationId = foundProduct?.inventoryItem?.inventoryLevels?.nodes[0]?.location.id;
+      const shopifyOnHand = foundProduct?.inventoryQuantity ?? 0;
+
+      const result = await saveInventoryChanges(
+        stockLocation,
+        initialStock,
+        inventoryItemId ?? null,
+        locationId ?? null,
+        shopifyOnHand
       );
 
-      const failedUpdates = results.filter((res) => !res.success);
-
-      if (failedUpdates.length > 0) {
-        setSaveStatus(`Save failed: ${failedUpdates[0].message}. Some lines were not updated.`);
-      } else {
-        setSaveStatus("Updates saved to Shopify.");
-        setInitialStock(JSON.parse(JSON.stringify(stockLocation))); // Update to new stock
+      if (!result.success) {
+        setError(result.message);
+        return;
       }
-    }
-    catch (e) {
+
+      setSaveStatus(
+        result.data.syncedShopify
+          ? "Inventory synced and bin updates saved."
+          : "Bin updates saved to Shopify."
+      );
+      setInitialStock(JSON.parse(JSON.stringify(stockLocation)));
+    } catch (e) {
       console.error("Error saving changes:", e);
-      setSaveStatus("Error when saving changes.");
-      setInitialStock(JSON.parse(JSON.stringify(initialStock))); // Revert to initial stock
+      setError("Error when saving changes.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const hasChanges = stockLocation.some((loc, index) => loc.qty !== initialStock[index].qty);
+  const initialStockById = new Map(initialStock.map((loc) => [loc.id, loc.qty]));
+  const hasChanges = stockLocation.some(
+    (loc) => initialStockById.get(loc.id) !== loc.qty
+  );
 
   useEffect(() => {
     inputRef.current?.focus();

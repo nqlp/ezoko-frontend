@@ -79,17 +79,16 @@ query GetVariantByBarcode($query: String!) {
           quantityUnit
         }
         
-        # TODO: Uncomment when Shopify enables inventoryItem in Storefront API
-        # inventoryItem {
-        # id
-        # inventoryLevels(first: 2) {
-        #   nodes {
-        #       location { 
-        #         id
-        #       }
-        #     }
-        #   }
-        # }
+        inventoryItem {
+        id
+        inventoryLevels(first: 2) {
+          nodes {
+              location { 
+                id
+              }
+            }
+          }
+        }
 
         # product associated to the variant
         product {

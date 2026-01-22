@@ -1,0 +1,48 @@
+"use server";
+
+import { ProductsApi } from "@/lib/shopify/productsApi";
+import { ShopifyClient } from "@/lib/shopify/client";
+import { ApiResponse } from "@/lib/types/ApiResponse";
+
+type SyncShopifyInventoryResult = {
+  syncedAt: string | null;
+};
+
+export async function syncShopifyInventory(
+  inventoryItemId: string,
+  locationId: string,
+  availableQuantity: number
+): Promise<ApiResponse<SyncShopifyInventoryResult>> {
+  try {
+    const client = new ShopifyClient();
+    const productsApi = new ProductsApi(client);
+
+    const result = await productsApi.syncShopifyInventory(
+      inventoryItemId,
+      locationId,
+      availableQuantity
+    );
+    const payload = result.inventorySetQuantities;
+    const error = payload.userErrors[0]?.message;
+
+    if (error) {
+      return {
+        success: false,
+        message: error || "Failed to sync Shopify inventory",
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        syncedAt: payload.inventoryAdjustmentGroup?.createdAt ?? null,
+      },
+    };
+  } catch (error) {
+    console.error("Error syncing Shopify inventory:", error);
+    return {
+      success: false,
+      message: "Failed to sync Shopify inventory",
+    };
+  }
+}

@@ -7,6 +7,8 @@ import { VariantWithStock } from "@/lib/types/VariantWithStock";
 import { MetaobjectField } from "@/lib/types/MetaobjectField";
 import { MetaobjectUpdatePayload } from "../types/ShopifyPayload";
 import { UPDATE_METAOBJECT_QTY } from "@/lib/shopify/mutations/updateMetaobjectQty";
+import { InventorySetQuantitiesPayload } from "../types/InventorySetQuantities";
+import { SYNC_SHOPIFY_INVENTORY } from "./mutations/updateShopifyInventory";
 
 export class ProductsApi {
   private client: ShopifyClient;
@@ -79,6 +81,13 @@ export class ProductsApi {
   async updateMetaobjectQty(id: string, newQty: string): Promise<MetaobjectUpdatePayload> {
     const result = await this.client.mutate<MetaobjectUpdatePayload>(
       UPDATE_METAOBJECT_QTY, { id, newQty }
+    );
+    return result;
+  }
+
+  async syncShopifyInventory(inventoryItemId: string, locationId: string, availableQuantity: number): Promise<InventorySetQuantitiesPayload> {
+    const result = await this.client.mutate<InventorySetQuantitiesPayload>(
+      SYNC_SHOPIFY_INVENTORY, { inventoryItemId, locationId, quantity: availableQuantity }
     );
     return result;
   }
