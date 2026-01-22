@@ -60,6 +60,9 @@ export default function Page() {
           ? "Inventory synced and bin updates saved."
           : "Bin updates saved to Shopify."
       );
+      setFoundProduct((prev) =>
+        prev ? { ...prev, inventoryQuantity: result.data.onHandQty } : prev
+      );
       setInitialStock(JSON.parse(JSON.stringify(stockLocation)));
     } catch (e) {
       console.error("Error saving changes:", e);

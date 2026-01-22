@@ -8,6 +8,7 @@ import { UpdateBinQtyByID } from "./updateBinQty";
 type SaveInventoryChangesResult = {
   syncedShopify: boolean;
   updatedBinCount: number;
+  onHandQty: number;
 };
 
 export async function saveInventoryChanges(
@@ -91,6 +92,7 @@ export async function saveInventoryChanges(
       data: {
         syncedShopify,
         updatedBinCount: changedBins.length,
+        onHandQty: sumOfBins,
       },
     };
   } catch (error) {
