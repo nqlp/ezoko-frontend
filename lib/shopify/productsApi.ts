@@ -83,9 +83,9 @@ export class ProductsApi {
     return result;
   }
 
-  async syncShopifyInventory(inventoryItemId: string, locationId: string, availableQuantity: number): Promise<InventorySetQuantitiesPayload> {
+  async syncShopifyInventory(inventoryItemId: string, locationId: string, onHandQty: number): Promise<InventorySetQuantitiesPayload> {
     const result = await this.client.mutate<InventorySetQuantitiesPayload>(
-      SYNC_SHOPIFY_INVENTORY, { inventoryItemId, locationId, quantity: availableQuantity }
+      SYNC_SHOPIFY_INVENTORY, { inventoryItemId, locationId, quantity: onHandQty }
     );
     return result;
   }

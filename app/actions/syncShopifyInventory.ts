@@ -11,17 +11,13 @@ type SyncShopifyInventoryResult = {
 export async function syncShopifyInventory(
   inventoryItemId: string,
   locationId: string,
-  availableQuantity: number
+  onHandQty: number
 ): Promise<ApiResponse<SyncShopifyInventoryResult>> {
   try {
     const client = new ShopifyClient();
     const productsApi = new ProductsApi(client);
 
-    const result = await productsApi.syncShopifyInventory(
-      inventoryItemId,
-      locationId,
-      availableQuantity
-    );
+    const result = await productsApi.syncShopifyInventory(inventoryItemId, locationId, onHandQty);
     const payload = result.inventorySetQuantities;
     const error = payload.userErrors[0]?.message;
 

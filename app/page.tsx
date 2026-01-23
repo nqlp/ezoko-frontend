@@ -19,16 +19,12 @@ export default function Page() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
-  const incrementQty = async (index: number) => {
-    setStockLocation((prev) => (
-      prev.map((loc, i) => i === index ? { ...loc, qty: loc.qty + 1 } : loc)
-    ));
+  const incrementQty = (index: number) => {
+    setStockLocation((prev) => (prev.map((loc, i) => i === index ? { ...loc, qty: loc.qty + 1 } : loc)));
   };
 
-  const decrementQty = async (index: number) => {
-    setStockLocation((prev) => (
-      prev.map((loc, i) =>
-        i === index ? { ...loc, qty: Math.max(0, loc.qty - 1) } : loc))
+  const decrementQty = (index: number) => {
+    setStockLocation((prev) => (prev.map((loc, i) => i === index ? { ...loc, qty: Math.max(0, loc.qty - 1) } : loc))
     );
   };
 

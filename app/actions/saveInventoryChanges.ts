@@ -20,13 +20,8 @@ export async function saveInventoryChanges(
 ): Promise<ApiResponse<SaveInventoryChangesResult>> {
 
   try {
-    const initialQtyByBinId = new Map(
-      initialBins.map((bin) => [bin.id, bin.qty])
-    );
-    const changedBins = currentBins.filter(
-      (bin) => initialQtyByBinId.get(bin.id) !== bin.qty
-    );
-
+    const initialQtyByBinId = new Map(initialBins.map((bin) => [bin.id, bin.qty]));
+    const changedBins = currentBins.filter((bin) => initialQtyByBinId.get(bin.id) !== bin.qty); 
     const sumOfBins = currentBins.reduce((sum, bin) => sum + bin.qty, 0);
 
     let syncedShopify = false;
@@ -39,11 +34,7 @@ export async function saveInventoryChanges(
         };
       }
 
-      const syncResult = await syncShopifyInventory(
-        inventoryItemId,
-        locationId,
-        sumOfBins
-      );
+      const syncResult = await syncShopifyInventory(inventoryItemId, locationId, sumOfBins);
 
       if (!syncResult.success) {
         return {
@@ -63,22 +54,14 @@ export async function saveInventoryChanges(
         }))
       );
 
-      const failedBinUpdates = binUpdateResults.filter(
-        (entry) => !entry.result.success
-      );
+      const failedBinUpdates = binUpdateResults.filter((entry) => !entry.result.success);
 
       if (failedBinUpdates.length > 0) {
-        const failedBinLabels = failedBinUpdates.map(
-          (entry) => entry.bin.binLocation || entry.bin.id
-        );
-        
-        const failureContext = syncedShopify
-          ? "Shopify inventory synced, but bin updates failed"
-          : "Bin updates failed";
-        
-          const firstErrorMessage = failedBinUpdates[0].result.success
-          ? "Unknown error"
-          : failedBinUpdates[0].result.message;
+        const failedBinLabels = failedBinUpdates.map((entry) => entry.bin.binLocation || entry.bin.id);
+
+        const failureContext = syncedShopify ? "Shopify inventory synced, but bin updates failed" : "Bin updates failed";
+
+        const firstErrorMessage = failedBinUpdates[0].result.success ? "Unknown error" : failedBinUpdates[0].result.message;
 
         return {
           success: false,
