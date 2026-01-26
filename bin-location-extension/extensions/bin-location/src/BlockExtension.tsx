@@ -11,14 +11,12 @@ export default async () => {
 function Extension() {
   const { query, data } = shopify;
 
-  // @ts-ignore
-  const applyMetafieldChange = shopify.applyMetafieldChange;
-
   const variantId = data?.selected?.[0]?.id;
 
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<StockItem[]>([]);
   const [error, setError] = useState("");
+  const [initialQtyById, setInitialQtyById] = useState<Record<string, number>>({});
 
   const getFieldValue = (list: MetaobjectField[], key: string): string | undefined => {
     const value = list.find((field) => field.key === key)?.value;
@@ -60,6 +58,7 @@ function Extension() {
             return { id: node.id, bin: binName, qty: parseInt(qty, 10) };
           });
           setItems(parsed);
+          setInitialQtyById(Object.fromEntries(parsed.map(i => [i.id, i.qty])));
         } else {
           setItems([]);
         }
@@ -72,61 +71,59 @@ function Extension() {
   }, [variantId, query]);
 
   const handleQtyChange = useCallback((id: string, newValue: string) => {
-    const newQty = parseInt(newValue, 10) || 0;
+    const parsedQty = parseInt(newValue, 10);
+    const newQty = Number.isFinite(parsedQty) ? Math.max(0, parsedQty) : 0;
 
-    setItems(prev => {
-      const newItems = prev.map(item => item.id === id ? { ...item, qty: newQty } : item);
-
-      if (applyMetafieldChange) {
-        applyMetafieldChange({
-          type: "updateMetafield",
-          namespace: "custom",
-          key: "warehouse_stock",
-          value: JSON.stringify(newItems.map(i => ({ id: i.id, qty: i.qty })))
-        });
-      }
-
-      return newItems;
-    });
-  }, [applyMetafieldChange]);
+    setItems(prev => prev.map(item => (item.id === id ? { ...item, qty: newQty } : item)));
+  }, []);
 
   return (
     <s-admin-block heading="Bin locations">
-      <s-stack direction="block" gap="small-500">
-        {loading && <s-text>Loading...</s-text>}
-        {!loading && error && <s-text tone="critical">{error}</s-text>}
-        {!loading && !error && items.length === 0 && (
-          <s-text>No bin locations found.</s-text>
-        )}
-
-        {!loading && !error && items.length > 0 && (
-          <s-table variant="auto">
-            <s-table-header>
-              <s-table-header-row>
-                <s-table-header>Bin location</s-table-header>
-                <s-table-header format="numeric">Quantity</s-table-header>
-              </s-table-header-row>
-            </s-table-header>
-            <s-table-body>
-              {items.map((item) => (
-                <s-table-row key={item.id}>
-                  <s-table-cell>
-                    <s-text font-weight="bold">{item.bin}</s-text>
-                  </s-table-cell>
-                  <s-table-cell>
-                    <s-number-field
-                      value={String(item.qty)}
-                      onInput={(event: Event & { currentTarget: { value: string } }) =>
-                        handleQtyChange(item.id, event.currentTarget.value)
-                      }
-                    />
-                  </s-table-cell>
-                </s-table-row>
-              ))}
-            </s-table-body>
-          </s-table>
-        )}
-      </s-stack>
+      <s-form
+        onSubmit={(event) => {
+          event.waitUntil((async () => {
+            setInitialQtyById(Object.fromEntries(items.map(i => [i.id, i.qty])));
+          })());
+        }}
+        onReset={() => {
+          setItems(prev => prev.map(i => ({ ...i, qty: initialQtyById[i.id] ?? i.qty })));
+        }}
+      >
+        <s-stack direction="block" >
+          {loading && <s-text>Loading...</s-text>}
+          {!loading && error && <s-text tone="critical">{error}</s-text>}
+          {!loading && !error && items.length > 0 && (
+            <s-table variant="auto">
+              <s-table-header>
+                <s-table-header-row>
+                  <s-table-header>Bin location</s-table-header>
+                  <s-table-header format="numeric">Quantity</s-table-header>
+                </s-table-header-row>
+              </s-table-header>
+              <s-table-body>
+                {items.map((item) => (
+                  <s-table-row key={item.id}>
+                    <s-table-cell>
+                      <s-text font-weight="bold">{item.bin}</s-text>
+                    </s-table-cell>
+                    <s-table-cell>
+                      <s-number-field
+                        name={`qty-${item.id}`}
+                        min={0}
+                        defaultValue={String(initialQtyById[item.id] ?? item.qty)}
+                        value={String(item.qty)}
+                        onChange={(event: Event & { currentTarget: { value: string } }) =>
+                          handleQtyChange(item.id, event.currentTarget.value)
+                        }
+                      />
+                    </s-table-cell>
+                  </s-table-row>
+                ))}
+              </s-table-body>
+            </s-table>
+          )}
+        </s-stack>
+      </s-form>
     </s-admin-block>
-  );
+  )
 }
