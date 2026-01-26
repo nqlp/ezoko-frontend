@@ -32,10 +32,8 @@ function Extension() {
     }
   };
 
-  const getFieldValue = (list: MetaobjectField[], key: string): string | undefined => {
-    const value = list.find((field) => field.key === key)?.value;
-    return value ?? undefined;
-  };
+  const getFieldValue = (list: MetaobjectField[], key: string): string | undefined =>
+    list.find((field) => field.key === key)?.value ?? undefined;
 
   useEffect(() => {
     async function load() {
@@ -96,7 +94,6 @@ function Extension() {
       <s-admin-block heading="Bin locations">
         <s-form
           onSubmit={(event) => {
-            
             // native save button behavior
             event.waitUntil((async () => {
               setError("");
@@ -106,20 +103,15 @@ function Extension() {
                 );
 
                 for (const item of dirtyItems) {
-                  try {
-                    const result = await query<UpdateStockResponse>(METAOBJECT_UPDATE_MUTATION, {
-                      variables: {
-                        id: item.id,
-                        fields: [{ key: "qty", value: String(item.qty) }],
-                      },
-                    });
+                  const result = await query<UpdateStockResponse>(METAOBJECT_UPDATE_MUTATION, {
+                    variables: {
+                      id: item.id,
+                      fields: [{ key: "qty", value: String(item.qty) }],
+                    },
+                  });
 
-                    assertNoGqlErrors(result);
-                    assertNoUserErrors(result?.data?.metaobjectUpdate?.userErrors);
-                  } catch (e) {
-                    const message = e instanceof Error ? e.message : "Failed to save bin quantities.";
-                    throw new Error(message);
-                  }
+                  assertNoGqlErrors(result);
+                  assertNoUserErrors(result?.data?.metaobjectUpdate?.userErrors);
                 }
 
                 // update initial quantities
@@ -160,7 +152,6 @@ function Extension() {
                         <s-number-field
                           name={`qty-${item.id}`}
                           min={0}
-                          defaultValue={String(initialQtyById[item.id] ?? item.qty)}
                           value={String(item.qty)}
                           onChange={(event: Event & { currentTarget: { value: string } }) =>
                             handleQtyChange(item.id, event.currentTarget.value)
