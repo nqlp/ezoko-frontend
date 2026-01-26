@@ -1,8 +1,9 @@
 import '@shopify/ui-extensions/preact';
-import { render } from 'preact';
+import { render, Fragment } from 'preact';
 import { useEffect, useState, useCallback } from 'preact/hooks';
 import { VARIANT_WAREHOUSE_STOCK_QUERY } from './queries';
 import { MetaobjectNode, MetaobjectField, StockItem, WarehouseStockResponse } from './types/warehouseStock';
+import { METAOBJECT_UPDATE_MUTATION, UpdateStockResponse } from './updateStock';
 
 export default async () => {
   render(<Extension />, document.body);
@@ -17,6 +18,19 @@ function Extension() {
   const [items, setItems] = useState<StockItem[]>([]);
   const [error, setError] = useState("");
   const [initialQtyById, setInitialQtyById] = useState<Record<string, number>>({});
+  const [formKey, setFormKey] = useState(0);
+
+  const assertNoGqlErrors = (result: any) => {
+    if (result?.errors?.length) {
+      throw new Error(result.errors.map((e: any) => e.message).join(" | "));
+    }
+  };
+
+  const assertNoUserErrors = (userErrors?: { message: string }[]) => {
+    if (userErrors?.length) {
+      throw new Error(userErrors.map(e => e.message).join(" | "));
+    }
+  };
 
   const getFieldValue = (list: MetaobjectField[], key: string): string | undefined => {
     const value = list.find((field) => field.key === key)?.value;
@@ -78,52 +92,89 @@ function Extension() {
   }, []);
 
   return (
-    <s-admin-block heading="Bin locations">
-      <s-form
-        onSubmit={(event) => {
-          event.waitUntil((async () => {
-            setInitialQtyById(Object.fromEntries(items.map(i => [i.id, i.qty])));
-          })());
-        }}
-        onReset={() => {
-          setItems(prev => prev.map(i => ({ ...i, qty: initialQtyById[i.id] ?? i.qty })));
-        }}
-      >
-        <s-stack direction="block" >
-          {loading && <s-text>Loading...</s-text>}
-          {!loading && error && <s-text tone="critical">{error}</s-text>}
-          {!loading && !error && items.length > 0 && (
-            <s-table variant="auto">
-              <s-table-header>
-                <s-table-header-row>
-                  <s-table-header>Bin location</s-table-header>
-                  <s-table-header format="numeric">Quantity</s-table-header>
-                </s-table-header-row>
-              </s-table-header>
-              <s-table-body>
-                {items.map((item) => (
-                  <s-table-row key={item.id}>
-                    <s-table-cell>
-                      <s-text font-weight="bold">{item.bin}</s-text>
-                    </s-table-cell>
-                    <s-table-cell>
-                      <s-number-field
-                        name={`qty-${item.id}`}
-                        min={0}
-                        defaultValue={String(initialQtyById[item.id] ?? item.qty)}
-                        value={String(item.qty)}
-                        onChange={(event: Event & { currentTarget: { value: string } }) =>
-                          handleQtyChange(item.id, event.currentTarget.value)
-                        }
-                      />
-                    </s-table-cell>
-                  </s-table-row>
-                ))}
-              </s-table-body>
-            </s-table>
-          )}
-        </s-stack>
-      </s-form>
-    </s-admin-block>
+    <Fragment key={formKey}>
+      <s-admin-block heading="Bin locations">
+        <s-form
+          onSubmit={(event) => {
+            
+            // native save button behavior
+            event.waitUntil((async () => {
+              setError("");
+              try {
+                const dirtyItems = items.filter(
+                  (item) => item.qty !== (initialQtyById[item.id] ?? item.qty)
+                );
+
+                for (const item of dirtyItems) {
+                  try {
+                    const result = await query<UpdateStockResponse>(METAOBJECT_UPDATE_MUTATION, {
+                      variables: {
+                        id: item.id,
+                        fields: [{ key: "qty", value: String(item.qty) }],
+                      },
+                    });
+
+                    assertNoGqlErrors(result);
+                    assertNoUserErrors(result?.data?.metaobjectUpdate?.userErrors);
+                  } catch (e) {
+                    const message = e instanceof Error ? e.message : "Failed to save bin quantities.";
+                    throw new Error(message);
+                  }
+                }
+
+                // update initial quantities
+                setInitialQtyById(Object.fromEntries(items.map(i => [i.id, i.qty])));
+                setFormKey((prev) => prev + 1);
+              } catch (e) {
+                const message = e instanceof Error ? e.message : "Failed to save bin quantities.";
+                setError(message);
+                throw e;
+              }
+            })());
+          }}
+
+          // discard changes
+          onReset={() => {
+            setItems(prev => prev.map(item => ({ ...item, qty: initialQtyById[item.id] ?? item.qty })));
+            setError("");
+          }}
+        >
+          <s-stack direction="block" >
+            {loading && <s-text>Loading...</s-text>}
+            {!loading && error && <s-text tone="critical">{error}</s-text>}
+            {!loading && !error && items.length > 0 && (
+              <s-table variant="auto">
+                <s-table-header>
+                  <s-table-header-row>
+                    <s-table-header>Bin location</s-table-header>
+                    <s-table-header format="numeric">Quantity</s-table-header>
+                  </s-table-header-row>
+                </s-table-header>
+                <s-table-body>
+                  {items.map((item) => (
+                    <s-table-row key={item.id}>
+                      <s-table-cell>
+                        <s-text font-weight="bold">{item.bin}</s-text>
+                      </s-table-cell>
+                      <s-table-cell>
+                        <s-number-field
+                          name={`qty-${item.id}`}
+                          min={0}
+                          defaultValue={String(initialQtyById[item.id] ?? item.qty)}
+                          value={String(item.qty)}
+                          onChange={(event: Event & { currentTarget: { value: string } }) =>
+                            handleQtyChange(item.id, event.currentTarget.value)
+                          }
+                        />
+                      </s-table-cell>
+                    </s-table-row>
+                  ))}
+                </s-table-body>
+              </s-table>
+            )}
+          </s-stack>
+        </s-form>
+      </s-admin-block>
+    </Fragment>
   )
 }
