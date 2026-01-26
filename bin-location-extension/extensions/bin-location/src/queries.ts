@@ -1,5 +1,5 @@
-export const VARIANT_WAREHOUSE_STOCK_QUERY = /* GraphQL */
-  `query VariantWarehouseStock($id: ID!) {
+export const VARIANT_WAREHOUSE_STOCK_QUERY = /* GraphQL */ `
+query VariantWarehouseStock($id: ID!) {
   productVariant(id: $id) {
     metafields(first: 50) {
       nodes {
