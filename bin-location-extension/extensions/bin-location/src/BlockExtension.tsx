@@ -89,6 +89,8 @@ function Extension() {
     setItems(prev => prev.map(item => (item.id === id ? { ...item, qty: newQty } : item)));
   }, []);
 
+  const sumOfBins = items.reduce((current, item) => current + item.qty, 0);
+
   return (
     <Fragment key={formKey}>
       <s-admin-block heading="Bin locations">
@@ -135,33 +137,36 @@ function Extension() {
             {loading && <s-text>Loading...</s-text>}
             {!loading && error && <s-text tone="critical">{error}</s-text>}
             {!loading && !error && items.length > 0 && (
-              <s-table variant="auto">
-                <s-table-header>
-                  <s-table-header-row>
-                    <s-table-header>Bin location</s-table-header>
-                    <s-table-header format="numeric">Quantity</s-table-header>
-                  </s-table-header-row>
-                </s-table-header>
-                <s-table-body>
-                  {items.map((item) => (
-                    <s-table-row key={item.id}>
-                      <s-table-cell>
-                        <s-text font-weight="bold">{item.bin}</s-text>
-                      </s-table-cell>
-                      <s-table-cell>
-                        <s-number-field
-                          name={`qty-${item.id}`}
-                          min={0}
-                          value={String(item.qty)}
-                          onChange={(event: Event & { currentTarget: { value: string } }) =>
-                            handleQtyChange(item.id, event.currentTarget.value)
-                          }
-                        />
-                      </s-table-cell>
-                    </s-table-row>
-                  ))}
-                </s-table-body>
-              </s-table>
+              <>
+                <s-text>On-hand: {sumOfBins}</s-text>
+                <s-table variant="auto">
+                  <s-table-header>
+                    <s-table-header-row>
+                      <s-table-header>Bin location</s-table-header>
+                      <s-table-header format="numeric">Quantity</s-table-header>
+                    </s-table-header-row>
+                  </s-table-header>
+                  <s-table-body>
+                    {items.map((item) => (
+                      <s-table-row key={item.id}>
+                        <s-table-cell>
+                          <s-text font-weight="bold">{item.bin}</s-text>
+                        </s-table-cell>
+                        <s-table-cell>
+                          <s-number-field
+                            name={`qty-${item.id}`}
+                            min={0}
+                            value={String(item.qty)}
+                            onChange={(event: Event & { currentTarget: { value: string } }) =>
+                              handleQtyChange(item.id, event.currentTarget.value)
+                            }
+                          />
+                        </s-table-cell>
+                      </s-table-row>
+                    ))}
+                  </s-table-body>
+                </s-table>
+              </>
             )}
           </s-stack>
         </s-form>
