@@ -3,7 +3,7 @@ import { render, Fragment } from 'preact';
 import { useEffect, useState, useCallback } from 'preact/hooks';
 import { VARIANT_WAREHOUSE_STOCK_QUERY } from './queries';
 import { MetaobjectNode, MetaobjectField, StockItem, WarehouseStockResponse } from './types/warehouseStock';
-import { METAOBJECT_UPDATE_MUTATION, UpdateStockResponse } from './updateStock';
+import { METAOBJECT_UPDATE_MUTATION, UpdateStockResponse, INVENTORY_SET_QUANTITIES_MUTATION, InventorySetResponse } from './updateStock';
 
 export default async () => {
   render(<Extension />, document.body);
@@ -19,6 +19,8 @@ function Extension() {
   const [error, setError] = useState("");
   const [initialQtyById, setInitialQtyById] = useState<Record<string, number>>({});
   const [formKey, setFormKey] = useState(0);
+  const [inventoryItemId, setInventoryItemId] = useState<string | null>(null);
+  const [locationId, setLocationId] = useState<string | null>(null);
 
   const assertNoGqlErrors = (result: any) => {
     if (result?.errors?.length) {
@@ -71,6 +73,8 @@ function Extension() {
           });
           setItems(parsed);
           setInitialQtyById(Object.fromEntries(parsed.map(i => [i.id, i.qty])));
+          setInventoryItemId(response.data.productVariant.inventoryItem?.id);
+          setLocationId(response.data.productVariant.inventoryItem.inventoryLevels.nodes[0].location.id);
         } else {
           setItems([]);
         }
@@ -88,8 +92,6 @@ function Extension() {
 
     setItems(prev => prev.map(item => (item.id === id ? { ...item, qty: newQty } : item)));
   }, []);
-
-  const sumOfBins = items.reduce((current, item) => current + item.qty, 0);
 
   return (
     <Fragment key={formKey}>
@@ -116,6 +118,20 @@ function Extension() {
                   assertNoUserErrors(result?.data?.metaobjectUpdate?.userErrors);
                 }
 
+                // Sync inventory to Shopify
+                if (inventoryItemId && locationId) {
+                  const sumOfBins = items.reduce((current, item) => current + item.qty, 0);
+                  const inventoryResult = await query<InventorySetResponse>(INVENTORY_SET_QUANTITIES_MUTATION, {
+                    variables: {
+                      inventoryItemId,
+                      locationId,
+                      quantity: sumOfBins
+                    }
+                  });
+                  assertNoGqlErrors(inventoryResult);
+                  assertNoUserErrors(inventoryResult?.data?.inventorySetQuantities?.userErrors);
+                }
+
                 // update initial quantities
                 setInitialQtyById(Object.fromEntries(items.map(i => [i.id, i.qty])));
                 setFormKey((prev) => prev + 1);
@@ -138,7 +154,6 @@ function Extension() {
             {!loading && error && <s-text tone="critical">{error}</s-text>}
             {!loading && !error && items.length > 0 && (
               <>
-                <s-text>On-hand: {sumOfBins}</s-text>
                 <s-table variant="auto">
                   <s-table-header>
                     <s-table-header-row>

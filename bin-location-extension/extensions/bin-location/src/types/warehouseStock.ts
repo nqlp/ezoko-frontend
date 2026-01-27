@@ -36,6 +36,16 @@ export interface WarehouseStockMetafieldNode {
 export interface WarehouseStockResponse {
   productVariant: {
     inventoryQuantity: number;
+    inventoryItem: {
+      id: string;
+      inventoryLevels: {
+        nodes: {
+          location: {
+            id: string;
+          }
+        }[];
+      };
+    };
     metafields: {
       nodes: WarehouseStockMetafieldNode[];
     };
