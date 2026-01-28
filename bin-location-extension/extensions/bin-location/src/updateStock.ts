@@ -52,14 +52,19 @@ export type SearchBinLocationsResponse = {
 };
 
 export const METAOBJECT_CREATE_BIN_QTY_MUTATION = /* GraphQL */ `
-  mutation CreateBinQty($type: String!, $handle: String!, $binLocationId: ID!, $qty: String!) {
+  mutation CreateBinQty($type: String!, $handle: String!, $binLocationId: String!, $qty: String!, $variantId: String!) {
     metaobjectCreate(metaobject: {
+    # type: bin_qty
       type: $type
       handle: $handle
       fields: [
         {
           key: "bin_location"
           value: $binLocationId
+        }
+        {
+          key: "product_variant"
+          value: $variantId
         }
         {
           key: "qty"
@@ -71,7 +76,26 @@ export const METAOBJECT_CREATE_BIN_QTY_MUTATION = /* GraphQL */ `
       userErrors { field message }
     }
   }
-;`
+`;
+
+export const METAOBJECT_CREATE_BIN_LOCATION_MUTATION = /* GraphQL */ `
+  mutation CreateBinLocation($type: String!, $handle: String!, $title: String!) {
+    metaobjectCreate(metaobject: {
+    # type: bin_location
+      type: $type
+      handle: $handle
+      fields: [
+        {
+          key: "bin_location"
+          value: $title
+        }
+      ]
+    }) {
+      metaobject { id handle }
+      userErrors { field message }
+    }
+  }
+`;
 
 export const METAFIELDS_SET_MUTATION = /* GraphQL */ `
   mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
@@ -94,6 +118,13 @@ export const METAFIELDS_SET_MUTATION = /* GraphQL */ `
 export type CreateBinQtyResponse = {
   metaobjectCreate: {
     metaobject: { id: string };
+    userErrors: { field: string; message: string }[];
+  };
+};
+
+export type CreateBinLocationResponse = {
+  metaobjectCreate: {
+    metaobject: { id: string; handle?: string | null };
     userErrors: { field: string; message: string }[];
   };
 };
