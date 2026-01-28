@@ -2,6 +2,7 @@ export const VARIANT_WAREHOUSE_STOCK_QUERY = /* GraphQL */ `
 query VariantWarehouseStock($id: ID!) {
   productVariant(id: $id) {
     inventoryQuantity
+    barcode
     inventoryItem {
       id
       inventoryLevels(first: 1) {
@@ -45,3 +46,18 @@ query VariantWarehouseStock($id: ID!) {
     }
   }
 }`;
+
+export const SEARCH_BIN_LOCATIONS_QUERY = /* GraphQL */ `
+query SearchBinLocations($query: String!) {
+  metaobjects(type: "bin_location", first: 10, query: $query) {
+    nodes {
+      id
+      handle
+      fields {
+        key
+        value
+      }
+    }
+  }
+}
+`;

@@ -2,6 +2,7 @@ export interface StockItem {
   id: string;
   bin: string;
   qty: number;
+  binLocationId?: string;
 }
 
 export interface MetaobjectField {
@@ -36,6 +37,7 @@ export interface WarehouseStockMetafieldNode {
 export interface WarehouseStockResponse {
   productVariant: {
     inventoryQuantity: number;
+    barcode?: string | null;
     inventoryItem: {
       id: string;
       inventoryLevels: {
