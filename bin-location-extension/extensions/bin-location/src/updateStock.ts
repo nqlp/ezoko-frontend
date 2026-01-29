@@ -1,9 +1,14 @@
 import { MetaobjectField } from "./types/warehouseStock";
 
+/** Fetch metaobject by ID 
+ *  Update existing metaobject fields
+ *  Return updated metaobject ID
+ * */ 
+
 export const METAOBJECT_UPDATE_MUTATION = /* GraphQL */ `
   mutation UpdateStock($id: ID!, $fields: [MetaobjectFieldInput!]!) {
-    metaobjectUpdate(id: $id, metaobject: { fields: $fields }) {
-      metaobject { id }
+    metaobjectUpdate(id: $id, metaobject: { fields: $fields }) { # object: key: "qty", value: "15"
+      metaobject { id } # ID: gid://shopify/Metaobject/123
       userErrors { field message }
     }
   }

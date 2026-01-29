@@ -1,20 +1,17 @@
+/* - Detect changes in qty and update the metaobject, 
+   - create or update bin location (metaobject) and qty if they exist, 
+   - sync inventory to Shopify,
+*/
+
 import { StockItem, BinLocation } from '../types/warehouseStock';
 import {
     METAOBJECT_UPDATE_MUTATION,
     UpdateStockResponse,
     INVENTORY_SET_QUANTITIES_MUTATION,
     InventorySetResponse,
-    METAOBJECT_CREATE_BIN_QTY_MUTATION,
-    METAFIELDS_SET_MUTATION,
-    CreateBinQtyResponse,
-    MetafieldsSetResponse,
-    METAOBJECT_CREATE_BIN_LOCATION_MUTATION,
-    CreateBinLocationResponse,
 } from '../updateStock';
 import {
     validateResponse,
-    getUserErrorsMessage,
-    toHandle,
     ShopifyQueryFct,
 } from '../utils/helpers';
 
@@ -25,11 +22,9 @@ export interface SaveStockParams {
     draftQty: string;
     draftQuery: string;
     selectedBin: BinLocation | null;
-    variantId: string;
-    variantBarcode: string | null;
     inventoryItemId: string | null;
     locationId: string | null;
-    findBinLocationByHandle: (handle: string) => Promise<BinLocation | null>;
+    findBinLocationBySearch: (searchString: string) => Promise<BinLocation | null>;
     query: ShopifyQueryFct;
 }
 
@@ -49,11 +44,9 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
         draftQty,
         draftQuery,
         selectedBin,
-        variantId,
-        variantBarcode,
         inventoryItemId,
         locationId,
-        findBinLocationByHandle,
+        findBinLocationBySearch,
         query,
     } = params;
 
@@ -82,32 +75,29 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
         }
 
         const trimmedQuery = draftQuery.trim();
-        let binToUse = selectedBin;
+        let targetBinLocation = selectedBin;
 
-        if (!binToUse) {
+        if (!selectedBin) {
+            throw new Error("Please select a bin location.");
+        }
+
+        if (!targetBinLocation) {
             if (!trimmedQuery) {
                 throw new Error("Please enter a bin location name.");
             }
-            const handle = toHandle(trimmedQuery);
-            if (!handle) {
-                throw new Error("Please enter a valid bin location name.");
-            }
 
-            const existing = await findBinLocationByHandle(handle);
+            const existing = await findBinLocationBySearch(trimmedQuery);
             if (existing) {
-                binToUse = existing;
+                targetBinLocation = existing;
             } else {
-                binToUse = await createBinLocation(query, handle, trimmedQuery, findBinLocationByHandle);
+                throw new Error(`Bin Location "${trimmedQuery}" does not exist.`);
             }
         }
 
-        const existingIndex = nextItems.findIndex(i => i.binLocationId === binToUse!.id);
-        if (existingIndex >= 0) {
+        const exitingStockIndex = nextItems.findIndex(i => i.binLocationId === targetBinLocation!.id);
+        if (exitingStockIndex >= 0) {
             // Update existing bin qty
-            await updateExistingBinQty(query, nextItems, existingIndex, qtyNum);
-        } else {
-            // Create new bin qty
-            await createNewBinQty(query, nextItems, binToUse!, qtyNum, variantId, variantBarcode);
+            await updateExistingBinQty(query, nextItems, exitingStockIndex, qtyNum);
         }
     }
 
@@ -119,111 +109,21 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
     return { updatedItems: nextItems };
 }
 
-async function createBinLocation(
-    query: ShopifyQueryFct,
-    handle: string,
-    title: string,
-    findBinLocationByHandle: (handle: string) => Promise<BinLocation | null>
-): Promise<BinLocation> {
-    const createLocationResult = await query<CreateBinLocationResponse>(METAOBJECT_CREATE_BIN_LOCATION_MUTATION, {
-        variables: {
-            type: "bin_location",
-            handle,
-            title,
-        },
-    });
-    // Note: Don't use validateResponse here because we handle userErrors specially for "Handle is invalid"
-
-    const createErrors = createLocationResult?.data?.metaobjectCreate?.userErrors;
-    const createErrorMessage = getUserErrorsMessage(createErrors);
-
-    if (createErrorMessage) {
-        if (createErrorMessage.includes("Handle is invalid")) {
-            const fallback = await findBinLocationByHandle(handle);
-            if (fallback) {
-                return fallback;
-            }
-        }
-        throw new Error(createErrorMessage);
-    }
-
-    const createdId = createLocationResult?.data?.metaobjectCreate?.metaobject?.id;
-    const createdHandle = createLocationResult?.data?.metaobjectCreate?.metaobject?.handle ?? handle;
-    if (!createdId) {
-        throw new Error("Failed to create bin location.");
-    }
-    return { id: createdId, handle: createdHandle, title };
-}
-
 async function updateExistingBinQty(
     query: ShopifyQueryFct,
     items: StockItem[],
-    existingIndex: number,
-    qtyNum: number
+    exitingStockIndex: number,
+    qtyNum: number,
 ): Promise<void> {
-    const existing = items[existingIndex];
+    const existing = items[exitingStockIndex];
     const result = await query<UpdateStockResponse>(METAOBJECT_UPDATE_MUTATION, {
         variables: {
             id: existing.id,
             fields: [{ key: "qty", value: String(qtyNum) }],
         },
     });
-    validateResponse<UpdateStockResponse>(result, d => d?.metaobjectUpdate?.userErrors);
-    items[existingIndex] = { ...existing, qty: qtyNum };
-}
-
-async function createNewBinQty(
-    query: ShopifyQueryFct,
-    items: StockItem[],
-    binToUse: BinLocation,
-    qtyNum: number,
-    variantId: string,
-    variantBarcode: string | null
-): Promise<void> {
-    const handleLabel = `${binToUse.title ?? binToUse.handle} - ${variantBarcode ?? "no-barcode"}`;
-    const handle = toHandle(handleLabel);
-    if (!handle) {
-        throw new Error("Please enter a valid bin location name.");
-    }
-
-    const result = await query<CreateBinQtyResponse>(METAOBJECT_CREATE_BIN_QTY_MUTATION, {
-        variables: {
-            type: "bin_qty",
-            handle,
-            binLocationId: binToUse.id,
-            qty: String(qtyNum),
-            variantId: variantId,
-        },
-    });
-    validateResponse<CreateBinQtyResponse>(result, d => d?.metaobjectCreate?.userErrors);
-
-    const newId = result?.data?.metaobjectCreate?.metaobject?.id;
-    if (!newId) throw new Error("Failed to create bin quantity metaobject.");
-
-    // Add to variant metafield
-    const newBinQtyItem = JSON.stringify([...items.map(item => item.id), newId]);
-
-    const setResponse = await query<MetafieldsSetResponse>(METAFIELDS_SET_MUTATION, {
-        variables: {
-            metafields: [
-                {
-                    ownerId: variantId,
-                    namespace: "custom",
-                    key: "warehouse_stock",
-                    type: "list.metaobject_reference",
-                    value: newBinQtyItem,
-                },
-            ],
-        },
-    });
-    validateResponse<MetafieldsSetResponse>(setResponse, d => d?.metafieldsSet?.userErrors);
-
-    items.push({
-        id: newId,
-        bin: binToUse.title || binToUse.handle,
-        qty: qtyNum,
-        binLocationId: binToUse.id,
-    });
+    validateResponse<UpdateStockResponse>(result, data => data?.metaobjectUpdate?.userErrors);
+    items[exitingStockIndex] = { ...existing, qty: qtyNum };
 }
 
 async function syncInventory(

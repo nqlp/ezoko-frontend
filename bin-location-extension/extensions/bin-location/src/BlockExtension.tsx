@@ -29,7 +29,6 @@ function Extension() {
     setInitialQtyById,
     inventoryItemId,
     locationId,
-    variantBarcode,
   } = useWarehouseStock(variantId, query);
 
   const {
@@ -42,8 +41,9 @@ function Extension() {
     searchResults,
     onSelectResult,
     resetDraft,
-    findBinLocationByHandle,
+    findBinLocationBySearch,
     handleQueryChange,
+    noResultsFound,
   } = useBinLocationSearch(isAdding, query);
 
   // Handlers 
@@ -69,11 +69,9 @@ function Extension() {
         draftQty,
         draftQuery,
         selectedBin,
-        variantId: variantId!,
-        variantBarcode,
         inventoryItemId,
         locationId,
-        findBinLocationByHandle,
+        findBinLocationBySearch,
         query,
       });
 
@@ -126,12 +124,13 @@ function Extension() {
                   onQueryChange={handleQueryChange}
                   onQtyChange={setDraftQty}
                   onSelectResult={onSelectResult}
+                  noResultsFound={noResultsFound}
                 />
               )}
 
               {loading && <s-text>Loading...</s-text>}
               {!loading && error && <s-text tone="critical">{error}</s-text>}
-              {!loading && !error && items.length > 0 && (
+              {!loading && items.length > 0 && (
                 <StockTable items={items} onQtyChange={handleQtyChange} />
               )}
             </s-stack>

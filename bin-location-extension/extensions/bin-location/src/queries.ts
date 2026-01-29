@@ -59,5 +59,4 @@ query SearchBinLocations($query: String!) {
       }
     }
   }
-}
-`;
+}`;

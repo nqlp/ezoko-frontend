@@ -8,6 +8,7 @@ interface AddBinLocationFormProps {
     onQueryChange: (value: string) => void;
     onQtyChange: (value: string) => void;
     onSelectResult: (result: BinLocation) => void;
+    noResultsFound?: boolean;
 }
 
 export function AddBinLocationForm({
@@ -18,6 +19,7 @@ export function AddBinLocationForm({
     onQueryChange,
     onQtyChange,
     onSelectResult,
+    noResultsFound,
 }: AddBinLocationFormProps) {
     return (
         <s-stack direction="block">
@@ -25,12 +27,15 @@ export function AddBinLocationForm({
                 label="Search Bin Location"
                 name="new-bin-location-search"
                 value={draftQuery}
-                onChange={(e: Event & { currentTarget: { value: string } }) => {
-                    onQueryChange(e.currentTarget.value);
+                onChange={(event: Event & { currentTarget: { value: string } }) => {
+                    onQueryChange(event.currentTarget.value);
                 }}
                 placeholder="Search bin location..."
             />
             {searching && <s-text>Searching...</s-text>}
+            {!searching && noResultsFound && draftQuery && (
+                <s-text tone="critical">Bin Location "{draftQuery}" does not exist. Try another search.</s-text>
+            )}
             {searchResults.length > 0 && (
                 <s-stack direction="block">
                     {searchResults.map(result => (
@@ -44,8 +49,8 @@ export function AddBinLocationForm({
                 label="Quantity"
                 name="new-bin-location-qty"
                 value={draftQty}
-                onChange={(e: Event & { currentTarget: { value: string } }) => onQtyChange(e.currentTarget.value)}
-                placeholder="Enter quantity"
+                onChange={(event: Event & { currentTarget: { value: string } }) => onQtyChange(event.currentTarget.value)}
+                placeholder="Enter quantity..."
             />
         </s-stack>
     );

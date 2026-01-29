@@ -41,16 +41,6 @@ export const getUserErrorsMessage = (userErrors?: { message: string }[]): string
   userErrors?.length ? userErrors.map(e => e.message).join(" | ") : "";
 
 /**
- * Convert a string value to a URL-friendly handle
- */
-export const toHandle = (value: string): string =>
-  value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-+|-+$)/g, "");
-
-/**
  * Get a field value from a list of MetaobjectFields by key
  */
 export const getFieldValue = (list: MetaobjectField[], key: string): string | undefined =>

@@ -21,7 +21,7 @@ export interface BinLocation {
   // ID of the location definition
   id: string;
   // Unique handle/code for the location (A-01-03)
-  handle: string;
+  handle?: string;
   // Human readable title/name of the location
   title?: string;
 }
