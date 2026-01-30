@@ -46,7 +46,6 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
         selectedBin,
         inventoryItemId,
         locationId,
-        findBinLocationBySearch,
         query,
     } = params;
 
@@ -55,7 +54,7 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
         (item) => item.qty !== (initialQtyById[item.id] ?? item.qty)
     );
 
-    for (const item of dirtyItems) {
+    await Promise.all(dirtyItems.map(async (item) => {
         const result = await query<UpdateStockResponse>(METAOBJECT_UPDATE_MUTATION, {
             variables: {
                 id: item.id,
@@ -63,41 +62,31 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
             },
         });
         validateResponse<UpdateStockResponse>(result, data => data?.metaobjectUpdate?.userErrors);
-    }
+    }));
 
     const nextItems = [...items];
 
     // Handle adding new bin location
     if (isAdding) {
+        const trimmedQuery = draftQuery.trim();
+
+        if (!selectedBin) {
+            if (!trimmedQuery) {
+                throw new Error("Please type and select a bin location.");
+            }
+            throw new Error(`"${trimmedQuery}" is not selected. Please choose a bin location from the suggestions.`);
+        }
+
         const qtyNum = parseInt(draftQty, 10);
         if (!Number.isFinite(qtyNum) || qtyNum < 0) {
             throw new Error("Please enter a valid quantity.");
         }
 
-        const trimmedQuery = draftQuery.trim();
-        let targetBinLocation = selectedBin;
-
-        if (!selectedBin) {
-            throw new Error("Please select a bin location.");
-        }
-
-        if (!targetBinLocation) {
-            if (!trimmedQuery) {
-                throw new Error("Please enter a bin location name.");
-            }
-
-            const existing = await findBinLocationBySearch(trimmedQuery);
-            if (existing) {
-                targetBinLocation = existing;
-            } else {
-                throw new Error(`Bin Location "${trimmedQuery}" does not exist.`);
-            }
-        }
-
-        const exitingStockIndex = nextItems.findIndex(i => i.binLocationId === targetBinLocation!.id);
-        if (exitingStockIndex >= 0) {
-            // Update existing bin qty
-            await updateExistingBinQty(query, nextItems, exitingStockIndex, qtyNum);
+        const existingStockIndex = nextItems.findIndex((i) => i.binLocationId === selectedBin.id);
+        if (existingStockIndex >= 0) {
+            await updateExistingBinQty(query, nextItems, existingStockIndex, qtyNum);
+        } else {
+            throw new Error(`This bin location: "${trimmedQuery}" is not yet linked to this variant.`);
         }
     }
 
@@ -112,10 +101,10 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
 async function updateExistingBinQty(
     query: ShopifyQueryFct,
     items: StockItem[],
-    exitingStockIndex: number,
+    existingStockIndex: number,
     qtyNum: number,
 ): Promise<void> {
-    const existing = items[exitingStockIndex];
+    const existing = items[existingStockIndex];
     const result = await query<UpdateStockResponse>(METAOBJECT_UPDATE_MUTATION, {
         variables: {
             id: existing.id,
@@ -123,7 +112,7 @@ async function updateExistingBinQty(
         },
     });
     validateResponse<UpdateStockResponse>(result, data => data?.metaobjectUpdate?.userErrors);
-    items[exitingStockIndex] = { ...existing, qty: qtyNum };
+    items[existingStockIndex] = { ...existing, qty: qtyNum };
 }
 
 async function syncInventory(
