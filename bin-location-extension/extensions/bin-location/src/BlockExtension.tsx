@@ -17,6 +17,7 @@ function Extension() {
 
   const [formKey, setFormKey] = useState(0);
   const [isAdding, setIsAdding] = useState(false);
+  const [validationError, setValidationError] = useState("");
 
   // Custom hooks
   const {
@@ -47,6 +48,11 @@ function Extension() {
   } = useBinLocationSearch(isAdding, query);
 
   // Handlers 
+  const handleBinSearch = (value: string) => {
+    handleQueryChange(value);
+    setValidationError("");
+  };
+
   // useCallback to memoize the function
   const handleQtyChange = useCallback((id: string, newValue: string) => {
     const parsedQty = parseInt(newValue, 10);
@@ -61,6 +67,7 @@ function Extension() {
 
   const handleSubmit = async () => {
     setError("");
+    setValidationError("");
     try {
       const { updatedItems } = await saveStock({
         items,
@@ -85,7 +92,11 @@ function Extension() {
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to save bin quantities.";
-      setError(message);
+      if (message.includes("select") || message.includes("selected")) {
+        setValidationError(message);
+      } else {
+        setError(message);
+      }
       throw e;
     }
   };
@@ -93,6 +104,7 @@ function Extension() {
   const handleReset = () => {
     setItems(prev => prev.map(item => ({ ...item, qty: initialQtyById[item.id] ?? item.qty })));
     setError("");
+    setValidationError("");
     setIsAdding(false);
     setSelectedBin(null);
     resetDraft();
@@ -121,10 +133,11 @@ function Extension() {
                   draftQty={draftQty}
                   searching={searching}
                   searchResults={searchResults}
-                  onQueryChange={handleQueryChange}
+                  onQueryChange={handleBinSearch}
                   onQtyChange={setDraftQty}
                   onSelectResult={onSelectResult}
                   noResultsFound={noResultsFound}
+                  validationError={validationError}
                 />
               )}
 

@@ -9,6 +9,7 @@ interface AddBinLocationFormProps {
     onQtyChange: (value: string) => void;
     onSelectResult: (result: BinLocation) => void;
     noResultsFound?: boolean;
+    validationError?: string;
 }
 
 export function AddBinLocationForm({
@@ -20,6 +21,7 @@ export function AddBinLocationForm({
     onQtyChange,
     onSelectResult,
     noResultsFound,
+    validationError,
 }: AddBinLocationFormProps) {
     return (
         <s-stack direction="block">
@@ -45,6 +47,7 @@ export function AddBinLocationForm({
                     ))}
                 </s-stack>
             )}
+            {validationError && <s-text tone="critical">{validationError}</s-text>}
             <s-text-field
                 label="Quantity"
                 name="new-bin-location-qty"
