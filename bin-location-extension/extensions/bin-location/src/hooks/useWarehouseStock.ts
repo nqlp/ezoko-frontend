@@ -56,7 +56,6 @@ export function useWarehouseStock(
             const refFields = binLocationRef?.fields || [];
             const binName =
               getFieldValue(refFields, "bin_location") ||
-              getFieldValue(fields, "bin") ||
               binLocationRef?.handle ||
               node.handle;
             const qty = getFieldValue(fields, "qty") || "0";
