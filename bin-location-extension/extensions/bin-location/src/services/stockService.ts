@@ -14,6 +14,7 @@ import {
     validateResponse,
     ShopifyQueryFct,
 } from '../utils/helpers';
+import { logCorrectionMovement } from './stockMovementLog';
 
 export interface SaveStockParams {
     items: StockItem[];
@@ -26,6 +27,9 @@ export interface SaveStockParams {
     locationId: string | null;
     findBinLocationBySearch: (searchString: string) => Promise<BinLocation | null>;
     query: ShopifyQueryFct;
+    variantId?: string | null;
+    variantBarcode?: string | null;
+    token?: string | null;
 }
 
 export interface SaveStockResult {
@@ -47,6 +51,9 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
         inventoryItemId,
         locationId,
         query,
+        variantId,
+        variantBarcode,
+        token,
     } = params;
 
     // Update dirty items (changed quantities)
@@ -62,6 +69,13 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
             },
         });
         validateResponse<UpdateStockResponse>(result, data => data?.metaobjectUpdate?.userErrors);
+        await logCorrectionMovement({
+            barcode: variantBarcode,
+            variantId: variantId,
+            destinationLocation: item.bin,
+            destinationQty: item.qty,
+            token,
+        });
     }));
 
     const nextItems = [...items];
@@ -84,7 +98,11 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
 
         const existingStockIndex = nextItems.findIndex((i) => i.binLocationId === selectedBin.id);
         if (existingStockIndex >= 0) {
-            await updateExistingBinQty(query, nextItems, existingStockIndex, qtyNum);
+            await updateExistingBinQty(query, nextItems, existingStockIndex, qtyNum, {
+                variantId,
+                variantBarcode,
+                token,
+            });
         } else {
             throw new Error(`This bin location: "${trimmedQuery}" is not yet linked to this variant.`);
         }
@@ -103,6 +121,7 @@ async function updateExistingBinQty(
     items: StockItem[],
     existingStockIndex: number,
     qtyNum: number,
+    logContext?: { variantId?: string | null; variantBarcode?: string | null; token?: string | null },
 ): Promise<void> {
     const existing = items[existingStockIndex];
     const result = await query<UpdateStockResponse>(METAOBJECT_UPDATE_MUTATION, {
@@ -112,6 +131,13 @@ async function updateExistingBinQty(
         },
     });
     validateResponse<UpdateStockResponse>(result, data => data?.metaobjectUpdate?.userErrors);
+    await logCorrectionMovement({
+        barcode: logContext?.variantBarcode,
+        variantId: logContext?.variantId,
+        destinationLocation: existing.bin,
+        destinationQty: qtyNum,
+        token: logContext?.token,
+    });
     items[existingStockIndex] = { ...existing, qty: qtyNum };
 }
 

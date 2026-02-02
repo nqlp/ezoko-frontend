@@ -4,6 +4,7 @@ import { ApiResponse } from "@/lib/types/ApiResponse";
 import { StockLocation } from "@/lib/types/StockLocation";
 import { syncShopifyInventory } from "./syncShopifyInventory";
 import { UpdateBinQtyByID } from "./updateBinQty";
+import { logCorrectionMovement } from "@/lib/stockMovement";
 
 type SaveInventoryChangesResult = {
   syncedShopify: boolean;
@@ -16,7 +17,9 @@ export async function saveInventoryChanges(
   initialBins: StockLocation[] = [],
   inventoryItemId: string | null,
   locationId: string | null,
-  shopifyOnHand: number
+  shopifyOnHand: number,
+  variantId?: string | null,
+  barcode?: string | null
 ): Promise<ApiResponse<SaveInventoryChangesResult>> {
 
   try {
@@ -68,6 +71,18 @@ export async function saveInventoryChanges(
           message: `${failureContext} for: ${failedBinLabels.join(", ")}. First error: ${firstErrorMessage}`,
         };
       }
+
+      await Promise.all(
+        binUpdateResults.map(async ({ bin, result }) => {
+          if (!result.success) return;
+          await logCorrectionMovement({
+            barcode,
+            variantId,
+            destinationLocation: bin.binLocation,
+            destinationQty: bin.qty,
+          });
+        })
+      );
     }
 
     return {

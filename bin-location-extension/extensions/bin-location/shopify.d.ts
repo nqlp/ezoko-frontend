@@ -59,3 +59,9 @@ declare module './src/updateStock.ts' {
   const shopify: import('@shopify/ui-extensions/admin.product-variant-details.block.render').Api;
   const globalThis: { shopify: typeof shopify };
 }
+
+//@ts-ignore
+declare module './src/services/stockMovementLog.ts' {
+  const shopify: import('@shopify/ui-extensions/admin.product-variant-details.block.render').Api;
+  const globalThis: { shopify: typeof shopify };
+}

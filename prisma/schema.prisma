@@ -8,20 +8,20 @@ datasource db {
 
 enum Activity {
   /// Correction when done through the Product Admin UI extension
-  CORRECTION   @map("Correction")
-  
+  CORRECTION @map("Correction")
+
   /// Goods RECEIPT when receiving a purchase order
   GOODS_RECEIPT @map("Goods RECEIPT")
-  
+
   /// Movement when moving stock from one bin to another
-  MOVEMENT     @map("Movement")
-  
+  MOVEMENT @map("Movement")
+
   /// Picking when picking a customer order or batch
-  PICKING      @map("Picking")
-  
+  PICKING @map("Picking")
+
   /// Goods Issue when stock is removed after fulfillment
-  GOODS_ISSUE  @map("Goods Issue")
-  
+  GOODS_ISSUE @map("Goods Issue")
+
   /// Inv Counting when qty changes due to inventory count discrepancy
   INV_COUNTING @map("Inv Counting")
 }
@@ -32,21 +32,21 @@ model store_integration {
 }
 
 model StockMovementLog {
-  id                  String    @id @default(uuid())
-  createdAt           DateTime  @default(now()) @map("created_at")
+  id                  String   @id @default(uuid())
+  createdAt           DateTime @default(now()) @map("created_at")
   user                String?
   activity            Activity
-  barcode             BigInt?
-  variantId           String?   @map("variant_id")
+  barcode             String?
+  variantId           String?  @map("variant_id")
   /// Source location (blank for Correction)
-  srcLocation         String?   @map("src_location")
-  srcQty              Int?      @map("src_qty")
+  srcLocation         String?  @map("src_location")
+  srcQty              Int?     @map("src_qty")
   /// Destination location (blank for Goods Issue)
-  destinationLocation String?   @map("destination_location")
+  destinationLocation String?  @map("destination_location")
   /// Destination qty (blank for Goods Issue)
-  destinationQty      Int?      @map("destination_qty")
+  destinationQty      Int?     @map("destination_qty")
   /// Reference document (blank for Admin UI)
-  referenceDoc        String?   @map("reference_doc")
+  referenceDoc        String?  @map("reference_doc")
 
   @@map("stock_movements_log")
 }

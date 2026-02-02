@@ -30,6 +30,7 @@ function Extension() {
     setInitialQtyById,
     inventoryItemId,
     locationId,
+    variantBarcode,
   } = useWarehouseStock(variantId, query);
 
   const {
@@ -80,6 +81,9 @@ function Extension() {
         locationId,
         findBinLocationBySearch,
         query,
+        variantId,
+        variantBarcode,
+        token: await shopify.auth.idToken(),
       });
 
       setItems(updatedItems);

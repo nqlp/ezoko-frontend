@@ -69,6 +69,8 @@ export function useBinLocationSearch(
     const fuzzyMatch = (query: string, target: string) => {
         // "abc" => "a.*b.*c". "abc" match "Alpha Beta Charlie"
         const pattern = query.split("").map(char => char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join(".*");
+
+        // Create a regex from the generated pattern, with the "i" flag to ignore case
         const regex = new RegExp(pattern, "i");
         return regex.test(target);
     };

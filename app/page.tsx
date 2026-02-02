@@ -43,7 +43,9 @@ export default function Page() {
         initialStock,
         inventoryItemId ?? null,
         locationId ?? null,
-        shopifyOnHand
+        shopifyOnHand,
+        foundProduct?.id ?? null,
+        foundProduct?.barcode ?? null
       );
 
       if (!result.success) {
