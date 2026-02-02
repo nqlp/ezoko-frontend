@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // TypeScript errors are checked via tsconfig.json exclude
   async headers() {
     return [
       {
