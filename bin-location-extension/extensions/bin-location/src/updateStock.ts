@@ -3,7 +3,7 @@ import { MetaobjectField } from "./types/warehouseStock";
 /** Fetch metaobject by ID 
  *  Update existing metaobject fields
  *  Return updated metaobject ID
- * */ 
+ * */
 
 export const METAOBJECT_UPDATE_MUTATION = /* GraphQL */ `
   mutation UpdateStock($id: ID!, $fields: [MetaobjectFieldInput!]!) {
@@ -142,4 +142,20 @@ export type MetafieldsSetResponse = {
     }[];
     userErrors: { field: string; message: string }[];
   };
+};
+
+export const GET_STAFF_MEMBER_QUERY = /* GraphQL */ `
+  query GetStaffMember($id: ID!) {
+    staffMember(id: $id) {
+      email
+      name
+    }
+  }
+`;
+
+export type GetStaffMemberResponse = {
+  staffMember: {
+    email: string;
+    name: string;
+  } | null;
 };

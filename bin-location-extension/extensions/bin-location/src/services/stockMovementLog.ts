@@ -45,7 +45,7 @@ function getEndpoint(): string {
 /**
  * Extracts user ID from a JWT token
  */
-function extractUserIdFromToken(token: string): string | null {
+export function extractUserIdFromToken(token: string): string | null {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
     return payload.sub ?? null;

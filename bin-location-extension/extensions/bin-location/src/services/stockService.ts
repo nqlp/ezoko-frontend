@@ -9,12 +9,14 @@ import {
     UpdateStockResponse,
     INVENTORY_SET_QUANTITIES_MUTATION,
     InventorySetResponse,
+    GET_STAFF_MEMBER_QUERY,
+    GetStaffMemberResponse,
 } from '../updateStock';
 import {
     validateResponse,
     ShopifyQueryFct,
 } from '../utils/helpers';
-import { logCorrectionMovement } from './stockMovementLog';
+import { logCorrectionMovement, extractUserIdFromToken } from './stockMovementLog';
 
 export interface SaveStockParams {
     items: StockItem[];
@@ -34,6 +36,23 @@ export interface SaveStockParams {
 
 export interface SaveStockResult {
     updatedItems: StockItem[];
+}
+
+async function getUserEmail(query: ShopifyQueryFct, token: string | null | undefined): Promise<string | null> {
+    if (!token) return null;
+    const userId = extractUserIdFromToken(token);
+    if (!userId) return null;
+
+    try {
+        const staffId = `gid://shopify/StaffMember/${userId}`;
+        const result = await query<GetStaffMemberResponse>(GET_STAFF_MEMBER_QUERY, {
+            variables: { id: staffId },
+        });
+        return result?.data?.staffMember?.email ?? null;
+    } catch (error) {
+        console.warn("Failed to fetch staff email:", error);
+        return null;
+    }
 }
 
 /**
@@ -56,6 +75,9 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
         token,
     } = params;
 
+    // Fetch user email once if possible
+    const userEmail = await getUserEmail(query, token);
+
     // Update dirty items (changed quantities)
     const dirtyItems = items.filter(
         (item) => item.qty !== (initialQtyById[item.id] ?? item.qty)
@@ -75,6 +97,7 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
             destinationLocation: item.bin,
             destinationQty: item.qty,
             token,
+            user: userEmail, // Log with email if available
         });
     }));
 
@@ -102,6 +125,7 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
                 variantTitle,
                 variantBarcode,
                 token,
+                userEmail
             });
         } else {
             throw new Error(`This bin location: "${trimmedQuery}" is not yet linked to this variant.`);
@@ -121,7 +145,7 @@ async function updateExistingBinQty(
     items: StockItem[],
     existingStockIndex: number,
     qtyNum: number,
-    logContext?: { variantTitle?: string | null; variantBarcode?: string | null; token?: string | null },
+    logContext?: { variantTitle?: string | null; variantBarcode?: string | null; token?: string | null; userEmail?: string | null },
 ): Promise<void> {
     const existing = items[existingStockIndex];
     const result = await query<UpdateStockResponse>(METAOBJECT_UPDATE_MUTATION, {
@@ -137,6 +161,7 @@ async function updateExistingBinQty(
         destinationLocation: existing.bin,
         destinationQty: qtyNum,
         token: logContext?.token,
+        user: logContext?.userEmail
     });
     items[existingStockIndex] = { ...existing, qty: qtyNum };
 }
