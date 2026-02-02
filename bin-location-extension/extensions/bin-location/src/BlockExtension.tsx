@@ -31,6 +31,7 @@ function Extension() {
     inventoryItemId,
     locationId,
     variantBarcode,
+    variantTitle,
   } = useWarehouseStock(variantId, query);
 
   const {
@@ -81,7 +82,7 @@ function Extension() {
         locationId,
         findBinLocationBySearch,
         query,
-        variantId,
+        variantTitle,
         variantBarcode,
         token: await shopify.auth.idToken(),
       });

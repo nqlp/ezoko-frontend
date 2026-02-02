@@ -27,7 +27,7 @@ export interface SaveStockParams {
     locationId: string | null;
     findBinLocationBySearch: (searchString: string) => Promise<BinLocation | null>;
     query: ShopifyQueryFct;
-    variantId?: string | null;
+    variantTitle?: string | null;
     variantBarcode?: string | null;
     token?: string | null;
 }
@@ -51,7 +51,7 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
         inventoryItemId,
         locationId,
         query,
-        variantId,
+        variantTitle,
         variantBarcode,
         token,
     } = params;
@@ -71,7 +71,7 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
         validateResponse<UpdateStockResponse>(result, data => data?.metaobjectUpdate?.userErrors);
         await logCorrectionMovement({
             barcode: variantBarcode,
-            variantId: variantId,
+            variantTitle: variantTitle,
             destinationLocation: item.bin,
             destinationQty: item.qty,
             token,
@@ -99,7 +99,7 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
         const existingStockIndex = nextItems.findIndex((i) => i.binLocationId === selectedBin.id);
         if (existingStockIndex >= 0) {
             await updateExistingBinQty(query, nextItems, existingStockIndex, qtyNum, {
-                variantId,
+                variantTitle,
                 variantBarcode,
                 token,
             });
@@ -121,7 +121,7 @@ async function updateExistingBinQty(
     items: StockItem[],
     existingStockIndex: number,
     qtyNum: number,
-    logContext?: { variantId?: string | null; variantBarcode?: string | null; token?: string | null },
+    logContext?: { variantTitle?: string | null; variantBarcode?: string | null; token?: string | null },
 ): Promise<void> {
     const existing = items[existingStockIndex];
     const result = await query<UpdateStockResponse>(METAOBJECT_UPDATE_MUTATION, {
@@ -133,7 +133,7 @@ async function updateExistingBinQty(
     validateResponse<UpdateStockResponse>(result, data => data?.metaobjectUpdate?.userErrors);
     await logCorrectionMovement({
         barcode: logContext?.variantBarcode,
-        variantId: logContext?.variantId,
+        variantTitle: logContext?.variantTitle,
         destinationLocation: existing.bin,
         destinationQty: qtyNum,
         token: logContext?.token,

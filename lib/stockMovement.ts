@@ -15,7 +15,7 @@ import { prisma } from "@/lib/prisma";
 
 type CorrectionLogInput = {
     barcode?: string | null;
-    variantId?: string | null;
+    variantTitle?: string | null;
     destinationLocation?: string | null;
     destinationQty?: number | null;
     referenceDoc?: string | null;
@@ -36,7 +36,7 @@ export async function logCorrectionMovement(input: CorrectionLogInput): Promise<
             data: {
                 activity: Activity.CORRECTION,
                 barcode: input.barcode ?? null,
-                variantId: input.variantId ?? null,
+                variantTitle: input.variantTitle ?? null,
                 srcLocation: null,
                 srcQty: null,
                 destinationLocation: input.destinationLocation ?? null,

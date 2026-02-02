@@ -14,6 +14,7 @@ export interface UseWarehouseStockResult {
   inventoryItemId: string | null;
   locationId: string | null;
   variantBarcode: string | null;
+  variantTitle: string | null;
 }
 
 export function useWarehouseStock(
@@ -27,6 +28,7 @@ export function useWarehouseStock(
   const [inventoryItemId, setInventoryItemId] = useState<string | null>(null);
   const [locationId, setLocationId] = useState<string | null>(null);
   const [variantBarcode, setVariantBarcode] = useState<string | null>(null);
+  const [variantTitle, setVariantTitle] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -66,6 +68,7 @@ export function useWarehouseStock(
           setInitialQtyById(Object.fromEntries(parsed.map(i => [i.id, i.qty])));
           setInventoryItemId(productVariant.inventoryItem?.id);
           setVariantBarcode(productVariant.barcode ?? null);
+          setVariantTitle(productVariant.title ?? null);
           setLocationId(productVariant.inventoryItem.inventoryLevels.nodes[0].location.id);
         } else {
           setItems([]);
@@ -89,5 +92,6 @@ export function useWarehouseStock(
     inventoryItemId,
     locationId,
     variantBarcode,
+    variantTitle,
   };
 }

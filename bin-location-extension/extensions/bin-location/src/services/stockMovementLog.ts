@@ -1,7 +1,7 @@
 type CorrectionLogInput = {
   user?: string | null;
   barcode?: string | null;
-  variantId?: string | null;
+  variantTitle?: string | null;
   destinationLocation?: string | null;
   destinationQty?: number | null;
   referenceDoc?: string | null;
@@ -20,7 +20,7 @@ enum Activity {
 type CorrectionStockMovementPayload = {
   activity: Activity.CORRECTION;
   barcode?: string | null;
-  variantId?: string | null;
+  variantTitle?: string | null;
   srcLocation?: string | null;
   srcQty?: number | null;
   destinationLocation?: string | null;
@@ -74,7 +74,7 @@ export async function logCorrectionMovement(input: CorrectionLogInput): Promise<
   const payload: CorrectionStockMovementPayload = {
     activity: Activity.CORRECTION,
     barcode: input.barcode ?? null,
-    variantId: input.variantId ?? null,
+    variantTitle: input.variantTitle ?? null,
     srcLocation: null, // Corrections don't have a source
     srcQty: null,
     destinationLocation: input.destinationLocation ?? null,

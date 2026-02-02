@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const {
       activity,
       barcode,
-      variantId,
+      variantTitle,
       srcLocation,
       srcQty,
       destinationLocation,
@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
     const log = await prisma.stockMovementLog.create({
       data: {
         activity: activity as Activity,
-        barcode: barcode,
-        variantId: variantId ?? null,
+        barcode: barcode ?? null,
+        variantTitle: variantTitle ?? null,
         srcLocation: srcLocation ?? null,
         srcQty: typeof srcQty === "number" ? srcQty : null,
         destinationLocation: destinationLocation ?? null,
@@ -82,7 +82,13 @@ export async function GET() {
       take: 100,
     });
 
-    return NextResponse.json({ success: true, data: logs });
+    // Format dates to EST timezone for display
+    const logToEST = logs.map(log => ({
+      ...log,
+      createdAt: log.createdAt.toLocaleString("en-US", { timeZone: "America/New_York" }),
+    }));
+
+    return NextResponse.json({ success: true, data: logToEST });
   } catch (error) {
     console.error("Error fetching stock movements:", error);
     return NextResponse.json(

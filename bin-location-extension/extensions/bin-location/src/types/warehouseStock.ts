@@ -57,6 +57,7 @@ export interface WarehouseStockMetafieldNode {
 
 export interface WarehouseStockResponse {
   productVariant: {
+    title: string;
     inventoryQuantity: number;
     barcode?: string | null;
     inventoryItem: {

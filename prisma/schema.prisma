@@ -37,7 +37,7 @@ model StockMovementLog {
   user                String?
   activity            Activity
   barcode             String?
-  variantId           String?  @map("variant_id")
+  variantTitle        String?  @map("variant_title")
   /// Source location (blank for Correction)
   srcLocation         String?  @map("src_location")
   srcQty              Int?     @map("src_qty")
