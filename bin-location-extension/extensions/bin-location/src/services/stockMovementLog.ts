@@ -9,12 +9,12 @@ type CorrectionLogInput = {
 };
 
 enum Activity {
-  CORRECTION = "Correction",
-  GOODS_RECEIPT = "Goods Receipt",
-  MOVEMENT = "Movement",
-  PICKING = "Picking",
-  GOODS_ISSUE = "Goods Issue",
-  INV_COUNTING = "Inv Counting",
+  CORRECTION = "CORRECTION",
+  GOODS_RECEIPT = "GOODS_RECEIPT",
+  MOVEMENT = "MOVEMENT",
+  PICKING = "PICKING",
+  GOODS_ISSUE = "GOODS_ISSUE",
+  INV_COUNTING = "INV_COUNTING",
 }
 
 type CorrectionStockMovementPayload = {
