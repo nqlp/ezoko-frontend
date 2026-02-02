@@ -24,7 +24,7 @@ export async function saveInventoryChanges(
 
   try {
     const initialQtyByBinId = new Map(initialBins.map((bin) => [bin.id, bin.qty]));
-    const changedBins = currentBins.filter((bin) => initialQtyByBinId.get(bin.id) !== bin.qty); 
+    const changedBins = currentBins.filter((bin) => initialQtyByBinId.get(bin.id) !== bin.qty);
     const sumOfBins = currentBins.reduce((sum, bin) => sum + bin.qty, 0);
 
     let syncedShopify = false;
@@ -77,7 +77,6 @@ export async function saveInventoryChanges(
           if (!result.success) return;
           await logCorrectionMovement({
             barcode,
-            variantId,
             destinationLocation: bin.binLocation,
             destinationQty: bin.qty,
           });
