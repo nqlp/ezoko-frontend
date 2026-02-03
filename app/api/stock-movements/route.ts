@@ -62,20 +62,10 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * OPTIONS /api/stock-movements
- * CORS preflight handler
- * Global CORS is handled in next.config.ts, but standard practice often includes 
- * an OPTIONS handler for API routes to ensure preflights resolve correctly.
- */
-export async function OPTIONS() {
-  return NextResponse.json({});
-}
-
-/**
  * GET /api/stock-movements
  * Returns the latest 100 stock movement logs
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const logs = await prisma.stockMovementLog.findMany({
       orderBy: { createdAt: "desc" },

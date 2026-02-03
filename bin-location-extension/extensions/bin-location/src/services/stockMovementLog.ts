@@ -8,6 +8,10 @@ type CorrectionLogInput = {
   token?: string | null;
 };
 
+/**
+ * IMPORTANT: This enum must stay in sync with prisma/schema.prisma Activity enum.
+ * If you add/remove values here, update the Prisma schema too
+ */
 enum Activity {
   CORRECTION = "CORRECTION",
   GOODS_RECEIPT = "GOODS_RECEIPT",
@@ -29,13 +33,14 @@ type CorrectionStockMovementPayload = {
   user?: string | null;
 };
 
+import { STOCK_MOVEMENTS_API } from '../config';
+
 /**
  * Returns the stock movement API endpoint URL.
- * IMPORTANT: Must be HTTPS for Shopify Admin UI Extensions.
- * Note: Hardcoded because browser extensions don't have access to process.env
+ * URL is defined in config.ts for easy environment switching
  */
 function getEndpoint(): string {
-  return "https://ezoko-frontend-test.up.railway.app/api/stock-movements";
+  return STOCK_MOVEMENTS_API;
 }
 
 // ============================================================================
@@ -44,11 +49,22 @@ function getEndpoint(): string {
 
 /**
  * Extracts user ID from a JWT token
+ * 
  */
+type JwtPayload = Record<string, any>;
+
+function parseJwtPayload(token: string): JwtPayload | null {
+  try {
+    return JSON.parse(atob(token.split(".")[1]));
+  } catch {
+    return null;
+  }
+}
+
 export function extractUserIdFromToken(token: string): string | null {
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.sub ?? null;
+    const payload = parseJwtPayload(token);
+    return payload?.sub ?? null;
   } catch {
     console.warn("Failed to parse JWT token for user ID");
     return null;
@@ -88,10 +104,17 @@ export async function logCorrectionMovement(input: CorrectionLogInput): Promise<
   };
 
   if (input.token) {
+    // authentification header
     headers.Authorization = `Bearer ${input.token}`;
   }
 
-  console.log("Logging stock movement:", { endpoint, activity: payload.activity });
+  console.log("Logging stock movement:", {
+    endpoint,
+    activity: payload.activity,
+    userId,
+    payload,
+    variants: payload.variantTitle,
+  });
 
   try {
     const response = await fetch(endpoint, {

@@ -144,18 +144,18 @@ export type MetafieldsSetResponse = {
   };
 };
 
-export const GET_STAFF_MEMBER_QUERY = /* GraphQL */ `
-  query GetStaffMember($id: ID!) {
+export const STAFF_MEMBER_QUERY = /* GraphQL */ `
+  query StaffMember($id: ID!) {
     staffMember(id: $id) {
-      email
-      name
+      firstName
+      lastName
     }
   }
 `;
 
-export type GetStaffMemberResponse = {
+export type StaffMemberResponse = {
   staffMember: {
-    email: string;
-    name: string;
+    firstName?: string | null;
+    lastName?: string | null;
   } | null;
 };

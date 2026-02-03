@@ -9,8 +9,8 @@ import {
     UpdateStockResponse,
     INVENTORY_SET_QUANTITIES_MUTATION,
     InventorySetResponse,
-    GET_STAFF_MEMBER_QUERY,
-    GetStaffMemberResponse,
+    STAFF_MEMBER_QUERY,
+    StaffMemberResponse,
 } from '../updateStock';
 import {
     validateResponse,
@@ -38,19 +38,34 @@ export interface SaveStockResult {
     updatedItems: StockItem[];
 }
 
-async function getUserEmail(query: ShopifyQueryFct, token: string | null | undefined): Promise<string | null> {
-    if (!token) return null;
+async function getUserFirstName(query: ShopifyQueryFct, token: string | null | undefined): Promise<string | null> {
+    if (!token) {
+        console.log("getUserFirstName: No token provided");
+        return null;
+    }
+
     const userId = extractUserIdFromToken(token);
-    if (!userId) return null;
+    if (!userId) {
+        console.log("getUserFirstName: Failed to extract userId from token");
+        return null;
+    }
 
     try {
         const staffId = `gid://shopify/StaffMember/${userId}`;
-        const result = await query<GetStaffMemberResponse>(GET_STAFF_MEMBER_QUERY, {
+        console.log(`getUserFirstName: Fetching staff for staffId: ${staffId}`);
+        const result = await query<StaffMemberResponse>(STAFF_MEMBER_QUERY, {
             variables: { id: staffId },
         });
-        return result?.data?.staffMember?.email ?? null;
+        if (result?.errors?.length) {
+            console.warn("getUserFirstName: staffMember errors:", result.errors);
+        }
+        const staff = result?.data?.staffMember;
+        const fallbackFirstName = staff?.lastName ? staff.lastName.split(" ")[0] : null;
+        const firstName = staff?.lastName ?? fallbackFirstName ?? null;
+        console.log(`getUserFirstName: Found firstName: ${firstName ?? "none"}`);
+        return firstName;
     } catch (error) {
-        console.warn("Failed to fetch staff email:", error);
+        console.warn("Failed to fetch staff first name:", error);
         return null;
     }
 }
@@ -75,8 +90,8 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
         token,
     } = params;
 
-    // Fetch user email once if possible
-    const userEmail = await getUserEmail(query, token);
+    // Fetch user first name once if possible
+    const userFirstName = await getUserFirstName(query, token);
 
     // Update dirty items (changed quantities)
     const dirtyItems = items.filter(
@@ -97,7 +112,7 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
             destinationLocation: item.bin,
             destinationQty: item.qty,
             token,
-            user: userEmail, // Log with email if available
+            user: userFirstName
         });
     }));
 
@@ -125,7 +140,6 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
                 variantTitle,
                 variantBarcode,
                 token,
-                userEmail
             });
         } else {
             throw new Error(`This bin location: "${trimmedQuery}" is not yet linked to this variant.`);
@@ -145,7 +159,7 @@ async function updateExistingBinQty(
     items: StockItem[],
     existingStockIndex: number,
     qtyNum: number,
-    logContext?: { variantTitle?: string | null; variantBarcode?: string | null; token?: string | null; userEmail?: string | null },
+    logContext?: { variantTitle?: string | null; variantBarcode?: string | null; token?: string | null; userFirstName?: string | null },
 ): Promise<void> {
     const existing = items[existingStockIndex];
     const result = await query<UpdateStockResponse>(METAOBJECT_UPDATE_MUTATION, {
@@ -161,7 +175,7 @@ async function updateExistingBinQty(
         destinationLocation: existing.bin,
         destinationQty: qtyNum,
         token: logContext?.token,
-        user: logContext?.userEmail
+        user: logContext?.userFirstName
     });
     items[existingStockIndex] = { ...existing, qty: qtyNum };
 }
