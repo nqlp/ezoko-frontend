@@ -5,6 +5,10 @@ import { StockLocation } from "@/lib/types/StockLocation";
 import { FIND_VARIANTS_BY_BARCODE_QUERY } from "@/lib/shopify/queries/variantQuery";
 import { VariantWithStock } from "@/lib/types/VariantWithStock";
 import { MetaobjectField } from "@/lib/types/MetaobjectField";
+import { MetaobjectUpdatePayload } from "../types/ShopifyPayload";
+import { UPDATE_METAOBJECT_QTY } from "@/lib/shopify/mutations/updateMetaobjectQty";
+import { InventorySetQuantitiesPayload } from "../types/InventorySetQuantities";
+import { SYNC_SHOPIFY_INVENTORY } from "./mutations/updateShopifyInventory";
 
 export class ProductsApi {
   private client: ShopifyClient;
@@ -56,12 +60,11 @@ export class ProductsApi {
         const parsedQty = Number.parseFloat(qtyField?.value ?? "0");
         const qty = Number.isFinite(parsedQty) ? parsedQty : 0;
 
-        if (qty > 0) {
-          binQty.push({
-            binLocation: binName,
-            qty: qty,
-          });
-        }
+        binQty.push({
+          id: edge.id,
+          binLocation: binName,
+          qty: qty,
+        });
       }
 
       return {
@@ -71,5 +74,19 @@ export class ProductsApi {
     });
 
     return variantsWithStock;
+  }
+
+  async updateMetaobjectQty(id: string, newQty: string): Promise<MetaobjectUpdatePayload> {
+    const result = await this.client.mutate<MetaobjectUpdatePayload>(
+      UPDATE_METAOBJECT_QTY, { id, newQty }
+    );
+    return result;
+  }
+
+  async syncShopifyInventory(inventoryItemId: string, locationId: string, onHandQty: number): Promise<InventorySetQuantitiesPayload> {
+    const result = await this.client.mutate<InventorySetQuantitiesPayload>(
+      SYNC_SHOPIFY_INVENTORY, { inventoryItemId, locationId, quantity: onHandQty }
+    );
+    return result;
   }
 }

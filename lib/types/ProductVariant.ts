@@ -12,6 +12,16 @@ export type ProductVariant = {
     availableForSale: boolean;
     position: number;
     inventoryQuantity?: number;
+    inventoryItem: {
+        id: string;
+        inventoryLevels: {
+            nodes: Array<{
+                location: {
+                    id: string;
+                }
+            }>;
+        };
+    };
 
     // image de la variante
     media?: {
@@ -58,6 +68,7 @@ export type ProductVariant = {
             value: string;
             references?: {
                 nodes: Array<{
+                    id: string;
                     handle: string;
                     fields: {
                         key: string;
