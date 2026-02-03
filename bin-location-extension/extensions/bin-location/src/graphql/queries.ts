@@ -2,6 +2,9 @@ export const VARIANT_WAREHOUSE_STOCK_QUERY = /* GraphQL */ `
 query VariantWarehouseStock($id: ID!) {
   productVariant(id: $id) {
     title
+    product {
+      title
+    }
     inventoryQuantity
     barcode
     inventoryItem {
@@ -59,5 +62,12 @@ query SearchBinLocations($query: String!) {
         value
       }
     }
+  }
+}`;
+
+export const STAFF_MEMBER_QUERY = /* GraphQL */ `
+query StaffMember($id: ID!) {
+  staffMember(id: $id) {
+    name
   }
 }`;

@@ -1,10 +1,3 @@
-import { MetaobjectField } from "./types/warehouseStock";
-
-/** Fetch metaobject by ID 
- *  Update existing metaobject fields
- *  Return updated metaobject ID
- * */
-
 export const METAOBJECT_UPDATE_MUTATION = /* GraphQL */ `
   mutation UpdateStock($id: ID!, $fields: [MetaobjectFieldInput!]!) {
     metaobjectUpdate(id: $id, metaobject: { fields: $fields }) { # object: key: "qty", value: "15"
@@ -33,28 +26,6 @@ export const INVENTORY_SET_QUANTITIES_MUTATION = /* GraphQL */ `
     }
   }
 `;
-
-export type UpdateStockResponse = {
-  metaobjectUpdate: {
-    userErrors: { message: string }[];
-  };
-};
-
-export type InventorySetResponse = {
-  inventorySetQuantities: {
-    userErrors: { message: string }[];
-  };
-};
-
-export type SearchBinLocationsResponse = {
-  metaobjects: {
-    nodes: {
-      id: string;
-      handle: string;
-      fields: MetaobjectField[];
-    }[];
-  };
-};
 
 export const METAOBJECT_CREATE_BIN_QTY_MUTATION = /* GraphQL */ `
   mutation CreateBinQty($type: String!, $handle: String!, $binLocationId: String!, $qty: String!, $variantId: String!) {
@@ -120,42 +91,3 @@ export const METAFIELDS_SET_MUTATION = /* GraphQL */ `
   }
 `;
 
-export type CreateBinQtyResponse = {
-  metaobjectCreate: {
-    metaobject: { id: string };
-    userErrors: { field: string; message: string }[];
-  };
-};
-
-export type CreateBinLocationResponse = {
-  metaobjectCreate: {
-    metaobject: { id: string; handle?: string | null };
-    userErrors: { field: string; message: string }[];
-  };
-};
-
-export type MetafieldsSetResponse = {
-  metafieldsSet: {
-    metafields: {
-      id: string;
-      value: string;
-    }[];
-    userErrors: { field: string; message: string }[];
-  };
-};
-
-export const STAFF_MEMBER_QUERY = /* GraphQL */ `
-  query StaffMember($id: ID!) {
-    staffMember(id: $id) {
-      firstName
-      lastName
-    }
-  }
-`;
-
-export type StaffMemberResponse = {
-  staffMember: {
-    firstName?: string | null;
-    lastName?: string | null;
-  } | null;
-};

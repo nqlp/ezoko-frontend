@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { VARIANT_WAREHOUSE_STOCK_QUERY } from '../queries';
+import { VARIANT_WAREHOUSE_STOCK_QUERY } from '../graphql/queries';
 import { MetaobjectNode, StockItem, WarehouseStockResponse } from '../types/warehouseStock';
 import { getFieldValue, ShopifyQueryFct } from '../utils/helpers';
 

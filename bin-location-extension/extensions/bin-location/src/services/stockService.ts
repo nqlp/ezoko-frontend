@@ -5,18 +5,17 @@
 
 import { StockItem, BinLocation } from '../types/warehouseStock';
 import {
-    METAOBJECT_UPDATE_MUTATION,
     UpdateStockResponse,
-    INVENTORY_SET_QUANTITIES_MUTATION,
     InventorySetResponse,
-    STAFF_MEMBER_QUERY,
     StaffMemberResponse,
-} from '../updateStock';
+} from '../types/api';
+import { METAOBJECT_UPDATE_MUTATION, INVENTORY_SET_QUANTITIES_MUTATION } from '../graphql/mutations';
 import {
     validateResponse,
     ShopifyQueryFct,
 } from '../utils/helpers';
 import { logCorrectionMovement, extractUserIdFromToken } from './stockMovementLog';
+import { STAFF_MEMBER_QUERY } from '../graphql/queries';
 
 export interface SaveStockParams {
     items: StockItem[];
@@ -52,7 +51,6 @@ async function getUserFirstName(query: ShopifyQueryFct, token: string | null | u
 
     try {
         const staffId = `gid://shopify/StaffMember/${userId}`;
-        console.log(`getUserFirstName: Fetching staff for staffId: ${staffId}`);
         const result = await query<StaffMemberResponse>(STAFF_MEMBER_QUERY, {
             variables: { id: staffId },
         });
@@ -60,10 +58,8 @@ async function getUserFirstName(query: ShopifyQueryFct, token: string | null | u
             console.warn("getUserFirstName: staffMember errors:", result.errors);
         }
         const staff = result?.data?.staffMember;
-        const fallbackFirstName = staff?.lastName ? staff.lastName.split(" ")[0] : null;
-        const firstName = staff?.lastName ?? fallbackFirstName ?? null;
-        console.log(`getUserFirstName: Found firstName: ${firstName ?? "none"}`);
-        return firstName;
+        const userFullName = staff?.name;
+        return userFullName;
     } catch (error) {
         console.warn("Failed to fetch staff first name:", error);
         return null;

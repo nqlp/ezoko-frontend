@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
-import { SEARCH_BIN_LOCATIONS_QUERY } from '../queries';
-import { SearchBinLocationsResponse } from '../updateStock';
+import { SEARCH_BIN_LOCATIONS_QUERY } from '../graphql/queries';
+import { SearchBinLocationsResponse } from '../types/api';
 import { BinLocation } from '../types/warehouseStock';
 import { getFieldValue, ShopifyQueryFct } from '../utils/helpers';
 

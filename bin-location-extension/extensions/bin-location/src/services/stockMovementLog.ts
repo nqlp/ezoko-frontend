@@ -61,6 +61,10 @@ function parseJwtPayload(token: string): JwtPayload | null {
   }
 }
 
+/**
+ * Extracts user ID from a JWT token
+ * ID is in the format: gid://shopify/StaffMember/1234567890
+ */
 export function extractUserIdFromToken(token: string): string | null {
   try {
     const payload = parseJwtPayload(token);
@@ -107,14 +111,6 @@ export async function logCorrectionMovement(input: CorrectionLogInput): Promise<
     // authentification header
     headers.Authorization = `Bearer ${input.token}`;
   }
-
-  console.log("Logging stock movement:", {
-    endpoint,
-    activity: payload.activity,
-    userId,
-    payload,
-    variants: payload.variantTitle,
-  });
 
   try {
     const response = await fetch(endpoint, {
