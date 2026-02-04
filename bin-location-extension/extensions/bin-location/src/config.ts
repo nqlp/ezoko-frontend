@@ -7,7 +7,7 @@
 
 // API endpoint for stock movement logging
 // Change this when deploying to production
-export const API_STOCK_MOVEMENTS_LOGS = "https://ezoko-frontend-test.up.railway.app/api/stock-movements_logs";
+export const API_STOCK_MOVEMENTS_LOGS = "https://ezoko-frontend-test.up.railway.app/api/stock-movements-logs";
 
 // For future use: production URL
-// export const API_STOCK_MOVEMENTS_LOGS = "https://ezoko-frontend.up.railway.app/api/stock-movements_logs";
+// export const API_STOCK_MOVEMENTS_LOGS = "https://ezoko-frontend.up.railway.app/api/stock-movements-logs";
