@@ -40,7 +40,7 @@ export default async function MobilePage() {
             {session ? (
                 <div>
                     <p className="wms-success">
-                        ✅ Hello, <strong>{session.shopifyUserName}</strong>
+                        Hello, <strong>{session.shopifyUserName}</strong>
                     </p>
                 </div>
             ) : (
