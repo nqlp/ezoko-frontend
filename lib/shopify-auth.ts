@@ -1,33 +1,50 @@
 /**
- * Shopify OAuth Authentication Configuration
+ * Shopify OAuth Configuration using @shopify/shopify-api
  * 
- * This module handles OAuth for mobile WMS screens.
- * It provides per-user (online) access tokens so we can track
- * which staff member performs each warehouse action.
+ * This module configures the official Shopify API library for OAuth
+ * authentication on mobile WMS screens.
  * 
  * NOTE: This is SEPARATE from lib/config/shopify.ts which uses
  * a stored Admin API token for system-level operations.
  */
 
+import "@shopify/shopify-api/adapters/node";
+import { shopifyApi, ApiVersion } from "@shopify/shopify-api";
 import crypto from "crypto";
 
-// ============================================================================
-// OAuth Helper Functions
-// ============================================================================
+// Initialize the Shopify API client
+export const shopify = shopifyApi({
+    apiKey: process.env.SHOPIFY_CLIENT_ID_BARCODE_SCANNER!,
+    apiSecretKey: process.env.SHOPIFY_CLIENT_SECRET_BARCODE_SCANNER!,
+    scopes: (process.env.SHOPIFY_OAUTH_SCOPES || "read_inventory,write_inventory").split(","),
+    hostName: process.env.APP_URL ? new URL(process.env.APP_URL).hostname : "localhost",
+    apiVersion: ApiVersion.January26,
+    isEmbeddedApp: false,
+});
 
 /**
- * Generate the Shopify OAuth authorization URL.
- * This is where the user will be redirected to log in.
- * 
- * @param shop - The Shopify store domain
- * @param state - A random string for CSRF protection
+ * Generate a cryptographically secure random session token.
+ * This will be stored in a cookie for session management.
+ */
+export function generateSessionToken(): string {
+    return crypto.randomBytes(32).toString("hex");
+}
+
+/**
+ * Generate a state parameter for CSRF protection.
+ */
+export function generateState(): string {
+    return crypto.randomBytes(16).toString("hex");
+}
+
+/**
+ * Get the OAuth authorization URL using the Shopify library.
  */
 export function getAuthorizationUrl(shop: string, state: string): string {
     const redirectUri = `${process.env.APP_URL}/api/auth/shopify/callback`;
     const scopes = process.env.SHOPIFY_OAUTH_SCOPES || "read_inventory,write_inventory";
 
-    // Build the authorization URL for "online" (per-user) access tokens
-    // The key is "grant_options[]=per-user" which gives us associated_user info
+    // Build authorization URL for online (per-user) access tokens
     return `https://${shop}/admin/oauth/authorize?` +
         `client_id=${process.env.SHOPIFY_CLIENT_ID_BARCODE_SCANNER}` +
         `&scope=${scopes}` +
@@ -37,11 +54,8 @@ export function getAuthorizationUrl(shop: string, state: string): string {
 }
 
 /**
- * Exchange the authorization code for an access token.
- * Returns both the token and the associated user info.
- * 
- * @param shop - The Shopify store domain
- * @param code - The authorization code from Shopify callback
+ * Exchange authorization code for access token.
+ * Returns both the token and associated user info.
  */
 export async function exchangeCodeForToken(
     shop: string,
@@ -86,20 +100,4 @@ export async function exchangeCodeForToken(
             email: data.associated_user.email,
         },
     };
-}
-
-/**
- * Generate a cryptographically secure random session token.
- * This will be stored in a cookie for session management.
- */
-export function generateSessionToken(): string {
-    return crypto.randomBytes(32).toString("hex");
-}
-
-/**
- * Generate a state parameter for CSRF protection.
- * This is sent in the OAuth redirect and verified in the callback.
- */
-export function generateState(): string {
-    return crypto.randomBytes(16).toString("hex");
 }
