@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
             path: "/",
         });
 
-        return NextResponse.redirect(`${process.env.APP_URL}/mobile`);
+        return NextResponse.redirect(`${process.env.APP_URL}/m`);
     } catch (error) {
         console.error("OAuth callback error exchanging code for token:", error);
         return NextResponse.json(
