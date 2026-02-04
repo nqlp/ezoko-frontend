@@ -48,5 +48,5 @@ model StockMovementLog {
   /// Reference document (blank for Admin UI)
   referenceDoc        String?  @map("reference_doc")
 
-  @@map("stock_movements_log")
+  @@map("stock_movements_logs")
 }

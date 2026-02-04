@@ -1,4 +1,4 @@
-type CorrectionLogInput = {
+interface CorrectionLogInput {
   user?: string | null;
   barcode?: string | null;
   variantTitle?: string | null;
@@ -6,7 +6,7 @@ type CorrectionLogInput = {
   destinationQty?: number | null;
   referenceDoc?: string | null;
   token?: string | null;
-};
+}
 
 /**
  * IMPORTANT: This enum must stay in sync with prisma/schema.prisma Activity enum.
@@ -21,7 +21,7 @@ enum Activity {
   INV_COUNTING = "INV_COUNTING",
 }
 
-type CorrectionStockMovementPayload = {
+interface CorrectionStockMovementPayload {
   activity: Activity.CORRECTION;
   barcode?: string | null;
   variantTitle?: string | null;
@@ -31,16 +31,16 @@ type CorrectionStockMovementPayload = {
   destinationQty?: number | null;
   referenceDoc?: string | null;
   user?: string | null;
-};
+}
 
-import { STOCK_MOVEMENTS_API } from '../config';
+import { API_STOCK_MOVEMENTS_LOGS } from '../config';
 
 /**
  * Returns the stock movement API endpoint URL.
  * URL is defined in config.ts for easy environment switching
  */
 function getEndpoint(): string {
-  return STOCK_MOVEMENTS_API;
+  return API_STOCK_MOVEMENTS_LOGS;
 }
 
 // ============================================================================

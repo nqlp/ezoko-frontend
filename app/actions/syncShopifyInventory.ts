@@ -4,9 +4,9 @@ import { ProductsApi } from "@/lib/shopify/productsApi";
 import { ShopifyClient } from "@/lib/shopify/client";
 import { ApiResponse } from "@/lib/types/ApiResponse";
 
-type SyncShopifyInventoryResult = {
+interface SyncShopifyInventoryResult {
   syncedAt: string | null;
-};
+}
 
 export async function syncShopifyInventory(
   inventoryItemId: string,

@@ -6,11 +6,11 @@ import { syncShopifyInventory } from "./syncShopifyInventory";
 import { UpdateBinQtyByID } from "./updateBinQty";
 import { logCorrectionMovement } from "@/lib/stockMovement";
 
-type SaveInventoryChangesResult = {
+interface SaveInventoryChangesResult {
   syncedShopify: boolean;
   updatedBinCount: number;
   onHandQty: number;
-};
+}
 
 export async function saveInventoryChanges(
   currentBins: StockLocation[] = [],
