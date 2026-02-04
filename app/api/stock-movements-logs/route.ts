@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/stock-movements
+ * GET /api/stock-movements-logs
  * Returns the latest 100 stock movement logs
  */
 export async function GET(request: NextRequest) {
