@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Activity {
+  /// Correction when done through the Product Admin UI extension
+  CORRECTION @map("Correction")
+
+  /// Goods RECEIPT when receiving a purchase order
+  GOODS_RECEIPT @map("Goods RECEIPT")
+
+  /// Movement when moving stock from one bin to another
+  MOVEMENT @map("Movement")
+
+  /// Picking when picking a customer order or batch
+  PICKING @map("Picking")
+
+  /// Goods Issue when stock is removed after fulfillment
+  GOODS_ISSUE @map("Goods Issue")
+
+  /// Inv Counting when qty changes due to inventory count discrepancy
+  INV_COUNTING @map("Inv Counting")
+}
+
+model store_integration {
+  store_domain String @id @default("ezokofishing.myshopify.com")
+  access_token String
+}
+
+model StockMovementLog {
+  id                  String   @id @default(uuid())
+  createdAt           DateTime @default(now()) @map("created_at")
+  user                String?
+  activity            Activity
+  barcode             String?
+  variantTitle        String?  @map("variant_title")
+  /// Source location (blank for Correction)
+  srcLocation         String?  @map("src_location")
+  srcQty              Int?     @map("src_qty")
+  /// Destination location (blank for Goods Issue)
+  destinationLocation String?  @map("destination_location")
+  /// Destination qty (blank for Goods Issue)
+  destinationQty      Int?     @map("destination_qty")
+  /// Reference document (blank for Admin UI)
+  referenceDoc        String?  @map("reference_doc")
+
+  @@map("stock_movements_logs")
+}
+
+model UserSession {
+  id                String     @id @default(uuid())
+  shopifyUserId     String     @unique @map("shopify_user_id")
+  shopifyUserEmail  String     @map("shopify_user_email")
+  shopifyUserName   String     @map("shopify_user_name")
+  sessionToken      String     @unique @map("session_token")
+  accessToken       String     @map("access_token")
+  expiresAt         DateTime   @map("expires_at")
+  createdAt         DateTime   @default(now()) @map("created_at")
+
+  @@map("user_sessions")
+  @@index([sessionToken])
+  @@index([shopifyUserId])
+}

@@ -5,15 +5,17 @@
 
 import { StockItem, BinLocation } from '../types/warehouseStock';
 import {
-    METAOBJECT_UPDATE_MUTATION,
     UpdateStockResponse,
-    INVENTORY_SET_QUANTITIES_MUTATION,
     InventorySetResponse,
-} from '../updateStock';
+    StaffMemberResponse,
+} from '../types/api';
+import { METAOBJECT_UPDATE_MUTATION, INVENTORY_SET_QUANTITIES_MUTATION } from '../graphql/mutations';
 import {
     validateResponse,
     ShopifyQueryFct,
 } from '../utils/helpers';
+import { logCorrectionMovement, extractUserIdFromToken } from './stockMovementLog';
+import { STAFF_MEMBER_QUERY } from '../graphql/queries';
 
 export interface SaveStockParams {
     items: StockItem[];
@@ -26,10 +28,42 @@ export interface SaveStockParams {
     locationId: string | null;
     findBinLocationBySearch: (searchString: string) => Promise<BinLocation | null>;
     query: ShopifyQueryFct;
+    variantTitle?: string | null;
+    variantBarcode?: string | null;
+    token?: string | null;
 }
 
 export interface SaveStockResult {
     updatedItems: StockItem[];
+}
+
+async function getUserFirstName(query: ShopifyQueryFct, token: string | null | undefined): Promise<string | null> {
+    if (!token) {
+        console.log("getUserFirstName: No token provided");
+        return null;
+    }
+
+    const userId = extractUserIdFromToken(token);
+    if (!userId) {
+        console.log("getUserFirstName: Failed to extract userId from token");
+        return null;
+    }
+
+    try {
+        const staffId = `gid://shopify/StaffMember/${userId}`;
+        const result = await query<StaffMemberResponse>(STAFF_MEMBER_QUERY, {
+            variables: { id: staffId },
+        });
+        if (result?.errors?.length) {
+            console.warn("getUserFirstName: staffMember errors:", result.errors);
+        }
+        const staff = result?.data?.staffMember;
+        const userFullName = staff?.name;
+        return userFullName;
+    } catch (error) {
+        console.warn("Failed to fetch staff first name:", error);
+        return null;
+    }
 }
 
 /**
@@ -47,7 +81,13 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
         inventoryItemId,
         locationId,
         query,
+        variantTitle,
+        variantBarcode,
+        token,
     } = params;
+
+    // Fetch user first name once if possible
+    const userFirstName = await getUserFirstName(query, token);
 
     // Update dirty items (changed quantities)
     const dirtyItems = items.filter(
@@ -62,6 +102,14 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
             },
         });
         validateResponse<UpdateStockResponse>(result, data => data?.metaobjectUpdate?.userErrors);
+        await logCorrectionMovement({
+            barcode: variantBarcode,
+            variantTitle: variantTitle,
+            destinationLocation: item.bin,
+            destinationQty: item.qty,
+            token,
+            user: userFirstName
+        });
     }));
 
     const nextItems = [...items];
@@ -84,7 +132,11 @@ export async function saveStock(params: SaveStockParams): Promise<SaveStockResul
 
         const existingStockIndex = nextItems.findIndex((i) => i.binLocationId === selectedBin.id);
         if (existingStockIndex >= 0) {
-            await updateExistingBinQty(query, nextItems, existingStockIndex, qtyNum);
+            await updateExistingBinQty(query, nextItems, existingStockIndex, qtyNum, {
+                variantTitle,
+                variantBarcode,
+                token,
+            });
         } else {
             throw new Error(`This bin location: "${trimmedQuery}" is not yet linked to this variant.`);
         }
@@ -103,6 +155,7 @@ async function updateExistingBinQty(
     items: StockItem[],
     existingStockIndex: number,
     qtyNum: number,
+    logContext?: { variantTitle?: string | null; variantBarcode?: string | null; token?: string | null; userFirstName?: string | null },
 ): Promise<void> {
     const existing = items[existingStockIndex];
     const result = await query<UpdateStockResponse>(METAOBJECT_UPDATE_MUTATION, {
@@ -112,6 +165,14 @@ async function updateExistingBinQty(
         },
     });
     validateResponse<UpdateStockResponse>(result, data => data?.metaobjectUpdate?.userErrors);
+    await logCorrectionMovement({
+        barcode: logContext?.variantBarcode,
+        variantTitle: logContext?.variantTitle,
+        destinationLocation: existing.bin,
+        destinationQty: qtyNum,
+        token: logContext?.token,
+        user: logContext?.userFirstName
+    });
     items[existingStockIndex] = { ...existing, qty: qtyNum };
 }
 

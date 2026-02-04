@@ -29,6 +29,7 @@ export function AddBinLocationForm({
                 label="Search Bin Location"
                 name="new-bin-location-search"
                 value={draftQuery}
+                labelAccessibilityVisibility="exclusive"
                 onChange={(event: Event & { currentTarget: { value: string } }) => {
                     onQueryChange(event.currentTarget.value);
                 }}
@@ -51,6 +52,7 @@ export function AddBinLocationForm({
             <s-text-field
                 label="Quantity"
                 name="new-bin-location-qty"
+                labelAccessibilityVisibility="visible"
                 value={draftQty}
                 onChange={(event: Event & { currentTarget: { value: string } }) => onQtyChange(event.currentTarget.value)}
                 placeholder="Enter quantity..."

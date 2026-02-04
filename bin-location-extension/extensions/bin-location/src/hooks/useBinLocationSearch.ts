@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
-import { SEARCH_BIN_LOCATIONS_QUERY } from '../queries';
-import { SearchBinLocationsResponse } from '../updateStock';
+import { SEARCH_BIN_LOCATIONS_QUERY } from '../graphql/queries';
+import { SearchBinLocationsResponse } from '../types/api';
 import { BinLocation } from '../types/warehouseStock';
 import { getFieldValue, ShopifyQueryFct } from '../utils/helpers';
 
@@ -69,6 +69,8 @@ export function useBinLocationSearch(
     const fuzzyMatch = (query: string, target: string) => {
         // "abc" => "a.*b.*c". "abc" match "Alpha Beta Charlie"
         const pattern = query.split("").map(char => char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join(".*");
+
+        // Create a regex from the generated pattern, with the "i" flag to ignore case
         const regex = new RegExp(pattern, "i");
         return regex.test(target);
     };

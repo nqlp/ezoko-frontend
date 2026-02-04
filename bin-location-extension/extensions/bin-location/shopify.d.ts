@@ -37,7 +37,7 @@ declare module './src/services/stockService.ts' {
 }
 
 //@ts-ignore
-declare module './src/queries.ts' {
+declare module './src/graphql/queries.ts' {
   const shopify: import('@shopify/ui-extensions/admin.product-variant-details.block.render').Api;
   const globalThis: { shopify: typeof shopify };
 }
@@ -55,7 +55,25 @@ declare module './src/utils/helpers.ts' {
 }
 
 //@ts-ignore
-declare module './src/updateStock.ts' {
+declare module './src/types/api.ts' {
+  const shopify: import('@shopify/ui-extensions/admin.product-variant-details.block.render').Api;
+  const globalThis: { shopify: typeof shopify };
+}
+
+//@ts-ignore
+declare module './src/graphql/mutations.ts' {
+  const shopify: import('@shopify/ui-extensions/admin.product-variant-details.block.render').Api;
+  const globalThis: { shopify: typeof shopify };
+}
+
+//@ts-ignore
+declare module './src/services/stockMovementLog.ts' {
+  const shopify: import('@shopify/ui-extensions/admin.product-variant-details.block.render').Api;
+  const globalThis: { shopify: typeof shopify };
+}
+
+//@ts-ignore
+declare module './src/config.ts' {
   const shopify: import('@shopify/ui-extensions/admin.product-variant-details.block.render').Api;
   const globalThis: { shopify: typeof shopify };
 }

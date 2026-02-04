@@ -4,24 +4,27 @@ import { ApiResponse } from "@/lib/types/ApiResponse";
 import { StockLocation } from "@/lib/types/StockLocation";
 import { syncShopifyInventory } from "./syncShopifyInventory";
 import { UpdateBinQtyByID } from "./updateBinQty";
+import { logCorrectionMovement } from "@/lib/stockMovement";
 
-type SaveInventoryChangesResult = {
+interface SaveInventoryChangesResult {
   syncedShopify: boolean;
   updatedBinCount: number;
   onHandQty: number;
-};
+}
 
 export async function saveInventoryChanges(
   currentBins: StockLocation[] = [],
   initialBins: StockLocation[] = [],
   inventoryItemId: string | null,
   locationId: string | null,
-  shopifyOnHand: number
+  shopifyOnHand: number,
+  variantId?: string | null,
+  barcode?: string | null
 ): Promise<ApiResponse<SaveInventoryChangesResult>> {
 
   try {
     const initialQtyByBinId = new Map(initialBins.map((bin) => [bin.id, bin.qty]));
-    const changedBins = currentBins.filter((bin) => initialQtyByBinId.get(bin.id) !== bin.qty); 
+    const changedBins = currentBins.filter((bin) => initialQtyByBinId.get(bin.id) !== bin.qty);
     const sumOfBins = currentBins.reduce((sum, bin) => sum + bin.qty, 0);
 
     let syncedShopify = false;
@@ -68,6 +71,17 @@ export async function saveInventoryChanges(
           message: `${failureContext} for: ${failedBinLabels.join(", ")}. First error: ${firstErrorMessage}`,
         };
       }
+
+      await Promise.all(
+        binUpdateResults.map(async ({ bin, result }) => {
+          if (!result.success) return;
+          await logCorrectionMovement({
+            barcode,
+            destinationLocation: bin.binLocation,
+            destinationQty: bin.qty,
+          });
+        })
+      );
     }
 
     return {

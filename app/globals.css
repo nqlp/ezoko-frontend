@@ -29,6 +29,7 @@ body {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -39,4 +40,50 @@ input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
   border-color: var(--ezoko-pine);
+}
+
+/* Mobile WMS Styles */
+.wms-container {
+  padding: 20px;
+  max-width: 400px;
+  margin: 0 auto;
+  background-color: var(--ezoko-paper);
+  color: var(--ezoko-ink);
+}
+
+.wms-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.wms-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--ezoko-pine);
+}
+
+.wms-logo {
+  border-radius: 8px;
+}
+
+.wms-success {
+  color: var(--ezoko-pine);
+}
+
+.wms-btn {
+  display: inline-block;
+  padding: 15px 30px;
+  background-color: var(--ezoko-pine);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.wms-btn:hover {
+  background-color: var(--ezoko-ink);
 }
