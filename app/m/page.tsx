@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
+import WmsLayout from "@/components/m/wmsLayout";
+import MobileScanner from "@/components/m/MobileScanner";
 
 async function getSession() {
     const cookieStore = await cookies();
@@ -25,31 +27,34 @@ export default async function MobilePage() {
     const session = await getSession();
 
     return (
-        <div className="wms-container">
-            <header className="wms-header">
-                <Image
-                    src="/favicon.ico"
-                    alt="Ezoko Logo"
-                    width={40}
-                    height={40}
-                    className="wms-logo"
-                />
-                <h1>Ezoko WMS</h1>
-            </header>
+        <WmsLayout title="MOVE">
+            <div className="wms-container">
+                <header className="wms-header">
+                    <Image
+                        src="/favicon.ico"
+                        alt="Ezoko Logo"
+                        width={40}
+                        height={40}
+                        className="wms-logo"
+                    />
+                    <h1>Ezoko WMS</h1>
+                </header>
 
-            {session ? (
-                <div>
-                    <p className="wms-success">
-                        Hello, <strong>{session.shopifyUserName}</strong>
-                    </p>
-                </div>
-            ) : (
-                <div>
-                    <a href="/api/auth/shopify" className="wms-btn">
-                        🔐 Login with Shopify
-                    </a>
-                </div>
-            )}
-        </div>
+                {session ? (
+                    <div>
+                        <p className="wms-success">
+                            Hello, <strong>{session.shopifyUserName}</strong>
+                        </p>
+                    </div>
+                ) : (
+                    <div>
+                        <a href="/api/auth/shopify" className="wms-btn">
+                            🔐 Connect with Shopify
+                        </a>
+                    </div>
+                )}
+                <MobileScanner />
+            </div>
+        </WmsLayout>
     );
 }

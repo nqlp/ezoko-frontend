@@ -7,6 +7,7 @@ import StockTable from "./scan/_components/StockTable";
 import { StockLocation } from "@/lib/types/StockLocation";
 import { ProductVariant } from "@/lib/types/ProductVariant";
 import { saveInventoryChanges } from "./actions/saveInventoryChanges";
+import { incrementQty, decrementQty } from "@/lib/stockHelpers";
 
 export default function Page() {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -19,15 +20,13 @@ export default function Page() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
-  const incrementQty = (index: number) => {
-    setStockLocation((prev) => (prev.map((loc, i) => i === index ? { ...loc, qty: loc.qty + 1 } : loc)));
+  const handleIncrementQty = (index: number) => {
+    setStockLocation(incrementQty(stockLocation, index));
   };
 
-  const decrementQty = (index: number) => {
-    setStockLocation((prev) => (prev.map((loc, i) => i === index ? { ...loc, qty: Math.max(0, loc.qty - 1) } : loc))
-    );
+  const handleDecrementQty = (index: number) => {
+    setStockLocation(decrementQty(stockLocation, index));
   };
-
   const handleSaveChanges = async () => {
     setIsSaving(true);
     setSaveStatus(null);
@@ -180,8 +179,8 @@ export default function Page() {
           <StockTable
             stockLocation={stockLocation}
             initialStock={initialStock}
-            incrementQty={incrementQty}
-            decrementQty={decrementQty}
+            incrementQty={handleIncrementQty}
+            decrementQty={handleDecrementQty}
           />
 
           <div className="text-center mt-4">

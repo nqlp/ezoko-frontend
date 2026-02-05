@@ -22,6 +22,13 @@ export async function getVariantByBarcode(
       };
     }
 
+    if (productVariants.length === 0) {
+      return {
+        success: false,
+        message: "Variant not found",
+      };
+    }
+
     return { success: true, data: productVariants[0] };
   } catch (error) {
     console.error("Error fetching product by barcode:", error);
