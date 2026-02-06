@@ -7,9 +7,10 @@ interface SnackbarProps {
     message: string,
     onClose: () => void;
     autoHideDuration?: number; // en millisecondes
+    severity?: "error" | "warning" | "info" | "success";
 }
 
-export default function SnackBar({ message, onClose, autoHideDuration }: SnackbarProps) {
+export default function SnackBar({ message, onClose, autoHideDuration, severity = "error" }: SnackbarProps) {
     useEffect(() => {
         if (message && autoHideDuration) {
             const timer = setTimeout(() => {
@@ -25,14 +26,11 @@ export default function SnackBar({ message, onClose, autoHideDuration }: Snackba
     return (
         <Alert
             onClose={onClose}
-            severity="error"
+            severity={severity}
             variant="filled"
             sx={{
                 width: '100%',
                 marginTop: '16px',
-                backgroundColor: 'var(--ezoko-rust)',
-                color: 'var(--ezoko-paper)',
-                border: '1px solid #f5c6cb',
             }}
         >
             {message}

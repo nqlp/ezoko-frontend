@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Checkbox from "@mui/material/Checkbox";
 import Divider from "@mui/material/Divider";
 import Table from "@mui/material/Table";
@@ -15,18 +15,21 @@ import IconButton from "@mui/material/IconButton";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
 
-interface BinLocationListProps {
+interface BinLocationTableProps {
     stockLocation: StockLocation[];
     selectedBins: string[];
     onBinSelectionChange: (bins: string[]) => void;
+    moveQty: number;
+    onMoveQtyChange: (qty: number) => void;
 }
 
-export default function BinLocationList({
+export default function BinLocationTable({
     stockLocation,
     selectedBins,
     onBinSelectionChange,
-}: BinLocationListProps) {
-    const [moveQty, setMoveQty] = useState(1);
+    moveQty,
+    onMoveQtyChange,
+}: BinLocationTableProps) {
 
     // Auto check if only one bin location
     useEffect(() => {
@@ -59,8 +62,13 @@ export default function BinLocationList({
                             return (
                                 <TableRow
                                     key={location.id}
+                                    onClick={() => handleToggle(location.id)}
                                     sx={{
                                         bgcolor: isChecked ? "var(--ezoko-mint)" : "var(--ezoko-paper)",
+                                        cursor: "pointer",
+                                        "&:hover": {
+                                            bgcolor: isChecked ? "var(--ezoko-mint)" : "var(--ezoko-paper)",
+                                        }
                                     }}
                                 >
                                     <TableCell padding="checkbox">
@@ -86,7 +94,7 @@ export default function BinLocationList({
             <Divider sx={{ my: 2 }} />
             <div style={{ display: "flex", alignItems: "center" }}>
                 <IconButton
-                    onClick={() => setMoveQty(moveQty - 1)}
+                    onClick={() => onMoveQtyChange(moveQty - 1)}
                     disabled={moveQty <= 1}
                 >
                     <RemoveIcon />
@@ -95,17 +103,16 @@ export default function BinLocationList({
                     label="Move Qty"
                     type="number"
                     value={moveQty}
-                    onChange={(e) => setMoveQty(Number(e.target.value))}
+                    onChange={(e) => onMoveQtyChange(Number(e.target.value))}
                     fullWidth
                     slotProps={{
                         htmlInput: {
                             min: 1,
-                            // max: stockLocation.find((location) => location.id === selectedBins[0])?.qty,
                         }
                     }}
                 />
                 <IconButton
-                    onClick={() => setMoveQty(moveQty + 1)}
+                    onClick={() => onMoveQtyChange(moveQty + 1)}
                 >
                     <AddIcon />
                 </IconButton>

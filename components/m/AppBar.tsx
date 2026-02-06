@@ -8,25 +8,37 @@ import Typography from "@mui/material/Typography";
 
 interface AppBarProps {
     title: string;
+    icon?: React.ReactNode;
+    actions?: React.ReactNode;
     onMenuClick: () => void;
 }
 
-export default function AppBarProps({ title, onMenuClick }: AppBarProps) {
+export default function AppBarProps({ title, icon, actions, onMenuClick }: AppBarProps) {
     const handleMenuClick = () => {
         onMenuClick();
     }
     return (
-        <AppBar position="absolute">
+        <AppBar position="absolute" color="primary" sx={{ backgroundColor: "var(--ezoko-ink)" }}>
             <Toolbar>
                 {/* Hamburger menu */}
                 <IconButton edge="start" color="inherit" aria-label="menu" onClick={handleMenuClick}>
                     <MenuIcon />
                 </IconButton>
 
+                {/* Optional icon before title */}
+                {icon && (
+                    <IconButton color="inherit" sx={{ mr: 1 }}>
+                        {icon}
+                    </IconButton>
+                )}
+
                 {/* Title */}
-                <Typography variant="h6" color="inherit" component="div">
+                <Typography variant="h6" color="inherit" component="div" sx={{ flexGrow: 1 }}>
                     {title}
                 </Typography>
+
+                {/* Custom actions (if provided) */}
+                {actions}
 
                 {/* Logo Ezoko */}
                 <img
@@ -35,6 +47,7 @@ export default function AppBarProps({ title, onMenuClick }: AppBarProps) {
                     width={32}
                     height={32}
                     className="wms-logo"
+                    style={{ marginLeft: actions ? '8px' : '0' }}
                 />
             </Toolbar>
         </AppBar>

@@ -13,11 +13,9 @@ export default function ScanInput({ onSubmit }: ScanInputProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const [barcodeValue, setBarcodeValue] = useState("");
 
-
     useEffect(() => {
         inputRef.current?.focus();
     }, []);
-
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter") {

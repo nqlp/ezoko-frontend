@@ -22,6 +22,16 @@ type CorrectionLogInput = {
     user?: string | null;
 };
 
+type MoveLogInput = {
+    barcode?: string | null;
+    variantTitle?: string | null;
+    srcLocation: string;
+    srcQty: number;
+    destinationLocation: string;
+    destinationQty: number;
+    user?: string | null;
+};
+
 // ============================================================================
 // Public API
 // ============================================================================
@@ -47,5 +57,29 @@ export async function logCorrectionMovement(input: CorrectionLogInput): Promise<
         });
     } catch (error) {
         console.error("Error logging correction stock movement:", error);
+    }
+}
+
+/**
+ * Logs a move stock movement directly to the database.
+ * Use this from server actions where direct DB access is available.
+ */
+export async function logMoveMovement(input: MoveLogInput): Promise<void> {
+    try {
+        await prisma.stockMovementLog.create({
+            data: {
+                activity: Activity.MOVEMENT,
+                barcode: input.barcode ?? null,
+                variantTitle: input.variantTitle ?? null,
+                srcLocation: input.srcLocation,
+                srcQty: input.srcQty,
+                destinationLocation: input.destinationLocation,
+                destinationQty: input.destinationQty,
+                referenceDoc: null,
+                user: input.user ?? null,
+            },
+        });
+    } catch (error) {
+        console.error("Error logging move stock movement:", error);
     }
 }

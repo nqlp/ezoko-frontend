@@ -14,11 +14,15 @@ import { useRouter } from "next/navigation";
 
 interface WmsLayoutProps {
     title: string;
+    icon?: React.ReactNode;
+    actions?: React.ReactNode;
     children: React.ReactNode;
 }
 
 export default function WmsLayout({
     title,
+    icon,
+    actions,
     children,
 }: WmsLayoutProps) {
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -40,8 +44,13 @@ export default function WmsLayout({
                     </ListItemButton>
                 </ListItem>
                 <ListItem disablePadding>
-                    <ListItemButton onClick={() => router.push("/m/")}>
+                    <ListItemButton onClick={() => router.push("/m/move")}>
                         <ListItemText primary="MOVE" />
+                    </ListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                    <ListItemButton onClick={() => router.push("/m/scan")}>
+                        <ListItemText primary="SCAN" />
                     </ListItemButton>
                 </ListItem>
             </List>
@@ -50,7 +59,7 @@ export default function WmsLayout({
 
     return (
         <div>
-            <AppBar title={title} onMenuClick={handleDrawerToggle} />
+            <AppBar title={title} icon={icon} actions={actions} onMenuClick={handleDrawerToggle} />
 
             <Drawer
                 variant="temporary"

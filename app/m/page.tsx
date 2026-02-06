@@ -27,7 +27,7 @@ export default async function MobilePage() {
     const session = await getSession();
 
     return (
-        <WmsLayout title="MOVE">
+        <WmsLayout title="HOME">
             <div className="wms-container">
                 <header className="wms-header">
                     <Image
@@ -53,7 +53,7 @@ export default async function MobilePage() {
                         </a>
                     </div>
                 )}
-                <MobileScanner />
+                <MobileScanner userName={session?.shopifyUserName ?? undefined} />
             </div>
         </WmsLayout>
     );
